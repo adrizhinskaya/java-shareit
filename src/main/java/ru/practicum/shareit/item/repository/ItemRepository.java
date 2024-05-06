@@ -6,15 +6,15 @@ import ru.practicum.shareit.item.model.Item;
 import java.util.Collection;
 
 public interface ItemRepository {
-    public Item create(Long userId, ItemDto itemDto);
+    Item create(Long userId, ItemDto itemDto);
 
-    public Item getById(Long id);
+    Item getById(Long id);
 
-    public Collection<Item> getAll(Long userId);
+    Collection<Item> getAll(Long userId);
 
-    public Collection<Item> getFromSearch(String text);
+    Collection<Item> getFromSearch(String text);
 
-    public Item update(Long userId, Long itemId, Item item);
+    Item update(Long userId, Item item, Item newItem);
 
-    public boolean itemExists(Long id);
+    boolean itemExists(Long id);
 }

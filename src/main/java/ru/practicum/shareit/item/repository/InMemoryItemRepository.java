@@ -57,8 +57,7 @@ public class InMemoryItemRepository implements ItemRepository {
     }
 
     @Override
-    public Item update(Long userId, Long itemId, Item newItem) {
-        Item item = getById(itemId);
+    public Item update(Long userId, Item item, Item newItem) {
         if (newItem.getName() != null) {
             item.setName(newItem.getName());
         }
