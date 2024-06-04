@@ -1,18 +1,22 @@
 package ru.practicum.shareit.user.service;
 
+import ru.practicum.shareit.exception.UserBadRequestException;
+import ru.practicum.shareit.exception.UserEmailConflictException;
+import ru.practicum.shareit.user.UserMapper;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.Collection;
+import java.util.List;
 
 public interface UserService {
-    User create(User user);
+    public UserDto create(UserDto userDto);
 
-    Collection<User> getAll();
+    public Collection<UserDto> getAll();
 
-    User getById(Long id);
+    public UserDto getById(Long id);
 
-    User update(Long userId, UserDto userDto);
+    public UserDto update(Long userId, UserDto userDto);
 
-    void delete(Long id);
+    public void delete(Long id);
 }

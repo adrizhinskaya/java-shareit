@@ -20,7 +20,7 @@ public class UserController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public User create(@Valid @RequestBody User user) {
+    public UserDto create(@Valid @RequestBody UserDto user) {
         log.info("POST /users: {}", user.toString());
         var result = userService.create(user);
         log.info("completion POST /users: {}", result.toString());
@@ -28,7 +28,7 @@ public class UserController {
     }
 
     @GetMapping
-    public Collection<User> getAll() {
+    public Collection<UserDto> getAll() {
         log.info("GET /users");
         var result = userService.getAll();
         log.info("completion GET /users: size {}", result.size());
@@ -36,7 +36,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public User getById(@PathVariable Long id) {
+    public UserDto getById(@PathVariable Long id) {
         log.info("GET /users/{id}: {}", id);
         var result = userService.getById(id);
         log.info("completion GET /users/{id}: {}", result.toString());
@@ -44,8 +44,8 @@ public class UserController {
     }
 
     @PatchMapping("/{userId}")
-    public User update(@PathVariable Long userId,
-                       @Valid @RequestBody UserDto userDto) {
+    public UserDto update(@PathVariable Long userId,
+                          @Valid @RequestBody UserDto userDto) {
         log.info("PATCH /users/{userId}: {}, {}", userId, userDto.toString());
         var result = userService.update(userId, userDto);
         log.info("completion PATCH /users/{userId}: {}", result.toString());

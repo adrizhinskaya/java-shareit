@@ -20,8 +20,8 @@ public class ItemController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Item create(@RequestHeader("X-Sharer-User-Id") Long userId,
-                       @Valid @RequestBody ItemDto itemDto) {
+    public ItemDto create(@RequestHeader("X-Sharer-User-Id") Long userId,
+                          @Valid @RequestBody ItemDto itemDto) {
         log.info("POST /items: {}", itemDto.toString());
         var result = itemService.create(userId, itemDto);
         log.info("completion POST /items: {}", result.toString());
@@ -29,7 +29,7 @@ public class ItemController {
     }
 
     @GetMapping
-    public Collection<Item> getAll(@RequestHeader("X-Sharer-User-Id") Long userId) {
+    public Collection<ItemDto> getAll(@RequestHeader("X-Sharer-User-Id") Long userId) {
         log.info("GET /items: {}", userId);
         var result = itemService.getAll(userId);
         log.info("completion GET /items: size {}", result.size());
@@ -37,8 +37,8 @@ public class ItemController {
     }
 
     @GetMapping("/search")
-    public Collection<Item> getFromSearch(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                          @RequestParam String text) {
+    public Collection<ItemDto> getFromSearch(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                             @RequestParam String text) {
         log.info("GET /items/search: {}, {}", userId, text);
         var result = itemService.getFromSearch(userId, text);
         log.info("completion GET /items/search: size {}", result.size());
@@ -46,7 +46,7 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public Item getById(@PathVariable Long itemId) {
+    public ItemDto getById(@PathVariable Long itemId) {
         log.info("GET /items/{id}: {}", itemId);
         var result = itemService.getById(itemId);
         log.info("completion GET /items/{id}: {}", result.toString());
@@ -54,9 +54,9 @@ public class ItemController {
     }
 
     @PatchMapping("/{itemId}")
-    public Item update(@RequestHeader("X-Sharer-User-Id") Long userId,
-                       @PathVariable Long itemId,
-                       @Valid @RequestBody Item item) {
+    public ItemDto update(@RequestHeader("X-Sharer-User-Id") Long userId,
+                          @PathVariable Long itemId,
+                          @Valid @RequestBody ItemDto item) {
         log.info("PATCH /items/{userId}: {}, {}, {}", userId, itemId, item.toString());
         var result = itemService.update(userId, itemId, item);
         log.info("completion PATCH /items/{userId}: {}", result.toString());
