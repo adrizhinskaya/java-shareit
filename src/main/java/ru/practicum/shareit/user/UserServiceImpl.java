@@ -1,14 +1,11 @@
-package ru.practicum.shareit.user.service;
+package ru.practicum.shareit.user;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.UserBadRequestException;
 import ru.practicum.shareit.exception.UserEmailConflictException;
-import ru.practicum.shareit.user.UserMapper;
-import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.repository.UserRepository;
+import ru.practicum.shareit.user.*;
 
 import java.util.Collection;
 import java.util.List;

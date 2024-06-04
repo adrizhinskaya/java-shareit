@@ -1,10 +1,7 @@
-package ru.practicum.shareit.item.model;
+package ru.practicum.shareit.item;
 
 import lombok.Builder;
 import lombok.Data;
-import lombok.ToString;
-import ru.practicum.shareit.request.ItemRequest;
-import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
 

@@ -2,8 +2,6 @@ package ru.practicum.shareit.user;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.model.User;
 
 import java.util.ArrayList;
 import java.util.Collection;
