@@ -9,8 +9,8 @@ import javax.validation.Valid;
 import java.util.Collection;
 
 @RestController
-@RequestMapping(path = "/users")
 @RequiredArgsConstructor
+@RequestMapping("/users")
 @Slf4j
 public class UserController {
     private final UserService userService;

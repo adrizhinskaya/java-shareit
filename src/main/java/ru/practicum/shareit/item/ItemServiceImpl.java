@@ -55,7 +55,7 @@ public class ItemServiceImpl implements ItemService {
                 .orElseThrow(() -> new UserBadRequestException("Попытка обновления айтема от несуществующего пользователя"));
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new ItemBadRequestException("Попытка обновления несуществующей вещи"));
-        if (!userId.equals(item.getUserId())) {
+        if (!userId.equals(item.getUser().getId())) {
             throw new UserBadRequestException("Вещь может обновить только владелец");
         }
         return create(userId, newItem);
