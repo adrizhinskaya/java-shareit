@@ -10,7 +10,7 @@ import java.util.Collection;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/users")
+@RequestMapping(path = "/users")
 @Slf4j
 public class UserController {
     private final UserService userService;

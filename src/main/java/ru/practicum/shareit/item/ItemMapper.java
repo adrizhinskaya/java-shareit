@@ -15,7 +15,7 @@ public class ItemMapper {
                 .name(item.getName())
                 .description(item.getDescription())
                 .available(item.getAvailable())
-                .userId(item.getUser().getId())
+                .ownerId(item.getOwner().getId())
                 .build();
     }
 
@@ -27,13 +27,13 @@ public class ItemMapper {
         return dtos;
     }
 
-    public static Item mapToItem(ItemDto itemDto, User user) {
+    public static Item mapToItem(ItemDto itemDto, User owner) {
         return Item.builder()
                 .id(itemDto.getId())
                 .name(itemDto.getName())
                 .description(itemDto.getDescription())
                 .available(itemDto.getAvailable())
-                .user(user)
+                .owner(owner)
                 .build();
     }
 }
