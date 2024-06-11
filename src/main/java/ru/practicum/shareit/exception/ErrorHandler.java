@@ -49,8 +49,37 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleItemIsNotAvailableException(final ItemIsNotAvailableException e) {
+        log.error("Вещь имеет статус \"недоступно\"");
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleBookingBadRequestException(final BookingBadRequestException e) {
+        log.error("Бронирования не существует");
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler
+        @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleUserIsNotOwnerException(final UserIsNotOwnerException e) {
+        log.error("Пользователь не является владельцем вещи");
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler(UnsupportedBookingStateException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleUnsupportedBookingStateException(final UnsupportedBookingStateException e) {
+        log.error(e.getMessage());
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleThrowable(final Throwable e) {
+        log.error(e.getMessage());
         return new ErrorResponse("Произошла непредвиденная ошибка.");
     }
 }

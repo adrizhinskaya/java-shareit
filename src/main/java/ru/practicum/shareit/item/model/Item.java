@@ -1,10 +1,12 @@
-package ru.practicum.shareit.item;
+package ru.practicum.shareit.item.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import org.apache.coyote.Request;
+import lombok.NoArgsConstructor;
 import ru.practicum.shareit.request.ItemRequest;
-import ru.practicum.shareit.user.User;
+import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
 
@@ -12,6 +14,9 @@ import javax.persistence.*;
 @Builder
 @Entity
 @Table(name = "items", schema = "public")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@NoArgsConstructor
+@AllArgsConstructor
 public class Item {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
