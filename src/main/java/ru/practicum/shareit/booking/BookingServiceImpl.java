@@ -22,17 +22,21 @@ public class BookingServiceImpl implements BookingService {
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
 
+    private User userExistCheck(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("Для операций бронирования нужно создать пользователя"));
+    }
+
     @Override
     public Booking create(Long userId, BookingDto bookingDto) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserBadRequestException("Попытка создания бронирования от несуществующего пользователя"));
+        User user = userExistCheck(userId);
         Item item = itemRepository.findById(bookingDto.getItemId())
-                .orElseThrow(() -> new ItemBadRequestException("Вещь не найдена"));
+                .orElseThrow(() -> new ItemNotFoundException("Вещь не найдена"));
         if (!item.getAvailable()) {
-            throw new ItemIsNotAvailableException("Попытка бронирования недоступной вещи");
+            throw new ItemBadRequestException("Попытка бронирования недоступной вещи");
         }
         if (userId.equals(item.getOwner().getId())) {
-            throw new BookingBadRequestException("Владелец вещи не может её бронировать");
+            throw new BookingNotFoundException("Владелец вещи не может её бронировать");
         }
         bookingDto.setStatus(BookingStatus.WAITING);
         return bookingRepository.save(BookingMapper.mapToBooking(bookingDto, item, user));
@@ -40,16 +44,16 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public Booking changeStatus(Long userId, Long bookingId, boolean approved) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserBadRequestException("Попытка смены статуса бронирования от несуществующего пользователя"));
+        userExistCheck(userId);
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new BookingBadRequestException("Бронирование не найдено"));
+                .orElseThrow(() -> new BookingNotFoundException("Бронирование не найдено"));
         if (!userId.equals(booking.getItem().getOwner().getId())) {
-            throw new UserIsNotOwnerException("Попытка смены статуса бронирования от пользователя НЕ являющегося владельцем");
+            throw new OwnerNotFoundException("Попытка смены статуса бронирования от пользователя " +
+                    "НЕ являющегося владельцем");
         }
         BookingStatus status = approved ? BookingStatus.APPROVED : BookingStatus.REJECTED;
         if (booking.getStatus().equals(status)) {
-            throw new UnsupportedBookingStateException("Такой статус уже присвоен");
+            throw new BookingStateBadRequestException("Такой статус уже присвоен");
         }
         booking.setStatus(status);
         return bookingRepository.save(booking);
@@ -57,20 +61,19 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public Booking getById(Long userId, Long bookingId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserBadRequestException("Попытка просмотра бронирования от несуществующего пользователя"));
+        userExistCheck(userId);
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new BookingBadRequestException("Бронирование не найдено"));
+                .orElseThrow(() -> new BookingNotFoundException("Бронирование не найдено"));
         if (userId.equals(booking.getItem().getOwner().getId()) || userId.equals(booking.getBooker().getId())) {
             return booking;
         }
-        throw new UserIsNotOwnerException("Попытка просмотра бронирования от пользователя НЕ являющегося owner или booker");
+        throw new OwnerNotFoundException("Попытка просмотра бронирования от пользователя " +
+                "НЕ являющегося owner или booker");
     }
 
     @Override
     public Collection<Booking> getAllByBooker(Long bookerId, BookingState state) {
-        User user = userRepository.findById(bookerId)
-                .orElseThrow(() -> new UserBadRequestException("Попытка просмотра бронирований от несуществующего пользователя"));
+        userExistCheck(bookerId);
 
         Set<BookingStatus> stateSet = new HashSet<>();
         switch (state) {
@@ -95,7 +98,7 @@ public class BookingServiceImpl implements BookingService {
                 stateSet.add(BookingStatus.CANCELED);
                 break;
             default:
-                throw new ItemBadRequestException("Unsupported state");
+                throw new ItemNotFoundException("Unsupported state");
         }
         Sort sort = Sort.by(Sort.Direction.DESC, "start");
         return bookingRepository.findAllByBooker_IdAndStatusIn(bookerId, stateSet, sort);
@@ -103,8 +106,7 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public Collection<Booking> getAllByOwner(Long ownerId, BookingState state) {
-        User user = userRepository.findById(ownerId)
-                .orElseThrow(() -> new UserBadRequestException("Попытка просмотра бронирований от несуществующего пользователя"));
+        userExistCheck(ownerId);
 
         Set<BookingStatus> stateSet = new HashSet<>();
         switch (state) {
@@ -129,10 +131,8 @@ public class BookingServiceImpl implements BookingService {
                 stateSet.add(BookingStatus.CANCELED);
                 break;
             default:
-                throw new ItemBadRequestException("Unsupported state");
+                throw new ItemNotFoundException("Unsupported state");
         }
         return bookingRepository.findAllByOwnerId(ownerId, stateSet);
     }
-
-
 }

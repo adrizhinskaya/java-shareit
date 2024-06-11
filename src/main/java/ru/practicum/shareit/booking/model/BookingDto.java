@@ -30,7 +30,7 @@ public class BookingDto {
     @AssertTrue(message = "Start date must be before end date")
     public boolean isStartDateBeforeEndDate() {
         if (start == null || end == null) {
-            return true; // Let @NotNull handle null checks
+            return true;
         }
         return start.isBefore(end);
     }

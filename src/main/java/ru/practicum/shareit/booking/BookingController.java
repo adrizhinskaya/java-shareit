@@ -6,7 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingDto;
-import ru.practicum.shareit.exception.UnsupportedBookingStateException;
+import ru.practicum.shareit.exception.BookingStateBadRequestException;
 
 import javax.validation.Valid;
 import java.util.Arrays;
@@ -36,8 +36,8 @@ public class BookingController {
 
     @PatchMapping("/{bookingId}")
     public Booking changeStatus(@RequestHeader("X-Sharer-User-Id") Long userId,
-                             @PathVariable Long bookingId,
-                             @RequestParam boolean approved) {
+                                @PathVariable Long bookingId,
+                                @RequestParam boolean approved) {
         log.info("{} /bookings/{}?approved={}: {}{}", patchColor, bookingId, approved, userId, resetColor);
         var result = bookingService.changeStatus(userId, bookingId, approved);
         log.info("completion PATCH /bookings/{}?approved={}: {}", bookingId, approved, result.toString());
@@ -46,7 +46,7 @@ public class BookingController {
 
     @GetMapping("/{bookingId}")
     public Booking getById(@RequestHeader("X-Sharer-User-Id") Long userId,
-                        @PathVariable Long bookingId) {
+                           @PathVariable Long bookingId) {
         log.info("{} /bookings/{}: {}{}", getColor, bookingId, userId, resetColor);
         var result = bookingService.getById(userId, bookingId);
         log.info("completion GET /bookings/{}: {}", bookingId, result.toString());
@@ -55,9 +55,9 @@ public class BookingController {
 
     @GetMapping()
     public Collection<Booking> getAllByBooker(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                      @RequestParam(required = false, defaultValue = "ALL") String state) {
+                                              @RequestParam(required = false, defaultValue = "ALL") String state) {
         if (!Arrays.asList(BookingState.values()).stream().anyMatch(e -> e.name().equals(state))) {
-            throw new UnsupportedBookingStateException(state);
+            throw new BookingStateBadRequestException(state);
         }
 
         log.info("{} /bookings/{}: {}{}", getColor, state, userId, resetColor);
@@ -68,9 +68,9 @@ public class BookingController {
 
     @GetMapping("/owner")
     public Collection<Booking> getAllByOwner(@RequestHeader("X-Sharer-User-Id") Long userId,
-                              @RequestParam(required = false, defaultValue = "ALL") String state) {
+                                             @RequestParam(required = false, defaultValue = "ALL") String state) {
         if (!Arrays.asList(BookingState.values()).stream().anyMatch(e -> e.name().equals(state))) {
-            throw new UnsupportedBookingStateException(state);
+            throw new BookingStateBadRequestException(state);
         }
 
         log.info("{} /bookings/owner/{}: {}{}", getColor, state, userId, resetColor);

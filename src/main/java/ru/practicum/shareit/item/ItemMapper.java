@@ -31,7 +31,8 @@ public class ItemMapper {
         return dtos;
     }
 
-    public static ItemGetDto mapToItemDtoForGet(Item item, BookingShort lastBooking, BookingShort nextBooking, Collection<CommentDto> comments) {
+    public static ItemGetDto mapToItemDtoForGet(Item item, BookingShort lastBooking, BookingShort nextBooking,
+                                                Collection<CommentDto> comments) {
         return ItemGetDto.builder()
                 .id(item.getId())
                 .name(item.getName())

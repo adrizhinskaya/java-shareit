@@ -32,10 +32,10 @@ public class ItemController {
         return result;
     }
 
-    @PostMapping ("/{itemId}/comment")
+    @PostMapping("/{itemId}/comment")
     public CommentDto addComment(@RequestHeader("X-Sharer-User-Id") Long userId,
-                          @PathVariable Long itemId,
-                          @Valid @RequestBody CommentDto comDto) {
+                                 @PathVariable Long itemId,
+                                 @Valid @RequestBody CommentDto comDto) {
         log.info("{} /items/{}/comment: {}, {}{}", postColor, itemId, userId, comDto.toString(), resetColor);
         var result = itemService.addComment(userId, itemId, comDto);
         log.info("completion PATCH /items/{userId}: {}", result.toString());

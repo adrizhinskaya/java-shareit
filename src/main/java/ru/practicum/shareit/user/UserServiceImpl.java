@@ -3,7 +3,7 @@ package ru.practicum.shareit.user;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.shareit.exception.UserBadRequestException;
+import ru.practicum.shareit.exception.UserNotFoundException;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.model.UserDto;
 import ru.practicum.shareit.user.model.UserUpdateDto;
@@ -32,14 +32,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto getById(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserBadRequestException("Пользователь не найден"));
+                .orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
         return UserMapper.mapToUserDto(user);
     }
 
     @Override
     public UserDto update(Long userId, UserUpdateDto userDto) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserBadRequestException("Попытка обновления несуществующего пользователя"));
+                .orElseThrow(() -> new UserNotFoundException("Попытка обновления несуществующего пользователя"));
         if(userDto.getName() != null) {
             user.setName(userDto.getName());
         }

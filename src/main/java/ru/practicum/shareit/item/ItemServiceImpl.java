@@ -4,11 +4,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.BookingStatus;
-import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingShort;
 import ru.practicum.shareit.exception.ItemBadRequestException;
-import ru.practicum.shareit.exception.ItemIsNotAvailableException;
-import ru.practicum.shareit.exception.UserBadRequestException;
+import ru.practicum.shareit.exception.ItemNotFoundException;
+import ru.practicum.shareit.exception.UserNotFoundException;
 import ru.practicum.shareit.item.comment.Comment;
 import ru.practicum.shareit.item.comment.CommentDto;
 import ru.practicum.shareit.item.comment.CommentMapper;
@@ -33,7 +32,8 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto create(Long userId, ItemDto itemDto) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserBadRequestException("Попытка создания айтема от несуществующего пользователя"));
+                .orElseThrow(() -> new UserNotFoundException("Попытка создания айтема от " +
+                        "несуществующего пользователя"));
         Item item = itemRepository.save(ItemMapper.mapToItem(itemDto, user));
         return ItemMapper.mapToItemDto(item);
     }
@@ -45,12 +45,14 @@ public class ItemServiceImpl implements ItemService {
         stateSet.add(BookingStatus.CANCELED);
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserBadRequestException("Попытка создания отзыва от несуществующего пользователя"));
+                .orElseThrow(() -> new UserNotFoundException("Попытка создания отзыва от " +
+                        "несуществующего пользователя"));
         Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new ItemBadRequestException("Вещь не найдена"));
+                .orElseThrow(() -> new ItemNotFoundException("Вещь не найдена"));
 
-        if (!bookingRepository.existsBookingByBooker_IdAndItem_IdAndEndBeforeAndStatusNotIn(userId, itemId, LocalDateTime.now(), stateSet)) {
-            throw new ItemIsNotAvailableException("ОТзыв невозможен если не было букинга или букинг не закончен");
+        if (!bookingRepository.existsBookingByBooker_IdAndItem_IdAndEndBeforeAndStatusNotIn(userId, itemId,
+                LocalDateTime.now(), stateSet)) {
+            throw new ItemBadRequestException("ОТзыв невозможен если не было букинга или букинг не закончен");
         }
         Comment comment = commentRepository.save(CommentMapper.mapToComment(comDto, user, item));
         return CommentMapper.mapToCommentDto(comment);
@@ -63,12 +65,15 @@ public class ItemServiceImpl implements ItemService {
         stateSet.add(BookingStatus.CANCELED);
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserBadRequestException("Попытка просмотра айтемов от несуществующего пользователя"));
+                .orElseThrow(() -> new UserNotFoundException("Попытка просмотра айтемов от " +
+                        "несуществующего пользователя"));
         List<Item> items = itemRepository.findByOwnerIdOrderByIdAsc(userId);
         List<ItemGetDto> itemsDtos = new ArrayList<>(items.size());
         items.forEach(item -> itemsDtos.add(ItemMapper.mapToItemDtoForGet(item,
-                bookingRepository.findAllByItem_IdFromStartAsc(item.getId(), stateSet).stream().findFirst().orElse(null),
-                bookingRepository.findAllByItem_IdAfterNowAsc(item.getId(), stateSet).stream().findFirst().orElse(null),
+                bookingRepository.findAllByItem_IdFromStartAsc(item.getId(), stateSet).stream()
+                        .findFirst().orElse(null),
+                bookingRepository.findAllByItem_IdAfterNowAsc(item.getId(), stateSet).stream()
+                        .findFirst().orElse(null),
                 CommentMapper.mapToCommentDto(commentRepository.findAllByItem_Id(item.getId())))));
         return itemsDtos;
     }
@@ -77,7 +82,8 @@ public class ItemServiceImpl implements ItemService {
     public Collection<ItemDto> getFromSearch(Long userId, String text) {
         if (text.isBlank()) return Collections.emptyList();
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserBadRequestException("Попытка просмотра айтемов от несуществующего пользователя"));
+                .orElseThrow(() -> new UserNotFoundException("Попытка просмотра айтемов от " +
+                        "несуществующего пользователя"));
         List<Item> items = itemRepository.search(text);
         return ItemMapper.mapToItemDto(items);
     }
@@ -89,12 +95,15 @@ public class ItemServiceImpl implements ItemService {
         stateSet.add(BookingStatus.CANCELED);
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserBadRequestException("Попытка просмотра айтемов от несуществующего пользователя"));
+                .orElseThrow(() -> new UserNotFoundException("Попытка просмотра айтемов от " +
+                        "несуществующего пользователя"));
         Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new ItemBadRequestException("Вещь не найдена"));
+                .orElseThrow(() -> new ItemNotFoundException("Вещь не найдена"));
         boolean isOwner = userId.equals(item.getOwner().getId());
-        BookingShort last = isOwner ? bookingRepository.findAllByItem_IdFromStartAsc(itemId, stateSet).stream().findFirst().orElse(null) : null;
-        BookingShort next = isOwner ? bookingRepository.findAllByItem_IdAfterNowAsc(itemId, stateSet).stream().findFirst().orElse(null) : null;
+        BookingShort last = isOwner ? bookingRepository.findAllByItem_IdFromStartAsc(itemId, stateSet).stream()
+                .findFirst().orElse(null) : null;
+        BookingShort next = isOwner ? bookingRepository.findAllByItem_IdAfterNowAsc(itemId, stateSet).stream()
+                .findFirst().orElse(null) : null;
         Collection<CommentDto> comms = CommentMapper.mapToCommentDto(commentRepository.findAllByItem_Id(itemId));
         return ItemMapper.mapToItemDtoForGet(item, last, next, comms);
     }
@@ -102,11 +111,12 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto update(Long userId, Long itemId, ItemDto newItem) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserBadRequestException("Попытка обновления айтема от несуществующего пользователя"));
+                .orElseThrow(() -> new UserNotFoundException("Попытка обновления айтема от " +
+                        "несуществующего пользователя"));
         Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new ItemBadRequestException("Попытка обновления несуществующей вещи"));
+                .orElseThrow(() -> new ItemNotFoundException("Попытка обновления несуществующей вещи"));
         if (!userId.equals(item.getOwner().getId())) {
-            throw new UserBadRequestException("Вещь может обновить только владелец");
+            throw new UserNotFoundException("Вещь может обновить только владелец");
         }
         if (newItem.getName() != null) {
             item.setName(newItem.getName());

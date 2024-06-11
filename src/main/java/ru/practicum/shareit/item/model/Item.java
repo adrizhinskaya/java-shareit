@@ -26,11 +26,11 @@ public class Item {
     @Column(name = "description", nullable = false)
     private String description;
     @Column(name = "is_available", nullable = false)
-    private Boolean available; // статус о том, доступна или нет вещь для аренды;
+    private Boolean available;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id")
     private User owner;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "request_id")
-    private ItemRequest request; // если вещь была создана по запросу другого пользователя, то в этом// поле будет храниться ссылка на соответствующий запрос
+    private ItemRequest request;
 }

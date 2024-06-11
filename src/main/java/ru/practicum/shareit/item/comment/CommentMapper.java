@@ -3,7 +3,6 @@ package ru.practicum.shareit.item.comment;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.model.ItemDto;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.ArrayList;

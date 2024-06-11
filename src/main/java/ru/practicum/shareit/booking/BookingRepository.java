@@ -9,13 +9,13 @@ import ru.practicum.shareit.booking.model.BookingShort;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
     Collection<Booking> findAllByBooker_IdAndStatusIn(Long bookerId, Set<BookingStatus> status, Sort sort);
-    boolean existsBookingByBooker_IdAndItem_IdAndEndBeforeAndStatusNotIn(Long bookerId, Long itemId, LocalDateTime now, @Param("states") Set<BookingStatus> states);
+
+    boolean existsBookingByBooker_IdAndItem_IdAndEndBeforeAndStatusNotIn(Long bookerId, Long itemId, LocalDateTime now,
+                                                                         @Param("states") Set<BookingStatus> states);
 
     @Query("SELECT b FROM Booking b WHERE b.item.owner.id = :ownerId AND b.status IN :states order by b.start desc")
     Collection<Booking> findAllByOwnerId(@Param("ownerId") Long ownerId, @Param("states") Set<BookingStatus> states);
@@ -48,11 +48,13 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "FROM Booking b " +
             "WHERE b.item.id = :itemId AND b.status NOT IN :states AND b.start < CURRENT_TIMESTAMP " +
             "ORDER BY b.start DESC")
-    Collection<BookingShort> findAllByItem_IdFromStartAsc(@Param("itemId") Long itemId, @Param("states") Set<BookingStatus> states);
+    Collection<BookingShort> findAllByItem_IdFromStartAsc(@Param("itemId") Long itemId,
+                                                          @Param("states") Set<BookingStatus> states);
 
     @Query("SELECT new ru.practicum.shareit.booking.model.BookingShort(b.id, b.booker.id ) " +
             "FROM Booking b " +
             "WHERE b.item.id = :itemId AND b.status NOT IN :states AND b.start > CURRENT_TIMESTAMP " +
             "ORDER BY b.start ASC")
-    Collection<BookingShort> findAllByItem_IdAfterNowAsc(@Param("itemId") Long itemId, @Param("states") Set<BookingStatus> states);
+    Collection<BookingShort> findAllByItem_IdAfterNowAsc(@Param("itemId") Long itemId,
+                                                         @Param("states") Set<BookingStatus> states);
 }
