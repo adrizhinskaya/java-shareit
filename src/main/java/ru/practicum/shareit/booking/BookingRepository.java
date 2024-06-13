@@ -41,7 +41,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("SELECT b " +
             "FROM Booking b " +
             "WHERE b.booker.id = :bookerId AND b.start < CURRENT_TIMESTAMP AND b.end > CURRENT_TIMESTAMP " +
-            "ORDER BY b.start ASC")
+            "ORDER BY b.end DESC")
     Collection<Booking> findCurrentBookingsByBooker_Id(@Param("bookerId") Long bookerId);
 
     @Query("SELECT new ru.practicum.shareit.booking.model.BookingShort(b.id, b.booker.id) " +
