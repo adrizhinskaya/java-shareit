@@ -40,7 +40,7 @@ public class UserServiceImpl implements UserService {
     public UserDto update(Long userId, UserUpdateDto userDto) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("Попытка обновления несуществующего пользователя"));
-        if(userDto.getName() != null) {
+        if (userDto.getName() != null) {
             user.setName(userDto.getName());
         }
         if (userDto.getEmail() != null) {
