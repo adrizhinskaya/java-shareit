@@ -23,34 +23,63 @@ public class ErrorHandler {
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
         });
-        log.error("Ошибка валидации {}", errors);
+        log.error("Validation error: {}", errors);
         return errors;
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleUserNotFoundException(final UserNotFoundException e) {
+        log.error("User not found");
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleItemNotFoundException(final ItemNotFoundException e) {
+        log.error("Item not found");
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleBookingNotFoundException(final BookingNotFoundException e) {
+        log.error("Booking not found");
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleOwnerNotFoundException(final OwnerNotFoundException e) {
+        log.error("Owner not found");
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleItemBadRequestException(final ItemBadRequestException e) {
+        log.error("Item bad request");
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler(BookingStateBadRequestException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleBookingStateBadRequestException(final BookingStateBadRequestException e) {
+        log.error("Booking state bad request");
+        return new ErrorResponse(e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleUserEmailConflictException(final UserEmailConflictException e) {
-        log.error("Нарушена уникальность email");
-        return new ErrorResponse(e.getMessage());
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleUserBadRequestException(final UserBadRequestException e) {
-        log.error("Пользователя не существует");
-        return new ErrorResponse(e.getMessage());
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleItemBadRequestException(final ItemBadRequestException e) {
-        log.error("Вещи не существует");
+        log.error("User email conflict");
         return new ErrorResponse(e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleThrowable(final Throwable e) {
+        log.error(e.getMessage());
         return new ErrorResponse("Произошла непредвиденная ошибка.");
     }
 }
