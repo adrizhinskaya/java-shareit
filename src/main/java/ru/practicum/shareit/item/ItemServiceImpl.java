@@ -7,6 +7,7 @@ import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.booking.model.BookingShort;
 import ru.practicum.shareit.exception.ItemBadRequestException;
 import ru.practicum.shareit.exception.ItemNotFoundException;
+import ru.practicum.shareit.exception.ItemRequestNotFoundException;
 import ru.practicum.shareit.exception.UserNotFoundException;
 import ru.practicum.shareit.item.comment.Comment;
 import ru.practicum.shareit.item.comment.CommentDto;
@@ -15,6 +16,8 @@ import ru.practicum.shareit.item.comment.CommentRepository;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.model.ItemDto;
 import ru.practicum.shareit.item.model.ItemGetDto;
+import ru.practicum.shareit.request.ItemRequestRepository;
+import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.user.UserRepository;
 import ru.practicum.shareit.user.model.User;
 
@@ -28,13 +31,18 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
+    private final ItemRequestRepository requestRepository;
 
     @Override
     public ItemDto create(Long userId, ItemDto itemDto) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("Попытка создания айтема от " +
                         "несуществующего пользователя"));
-        Item item = itemRepository.save(ItemMapper.mapToItem(itemDto, user));
+
+        ItemRequest request = itemDto.getRequestId() == null ? null :
+                requestRepository.findById(itemDto.getRequestId()).orElseThrow(() ->
+                new ItemRequestNotFoundException("Запрос не найден"));
+        Item item = itemRepository.save(ItemMapper.mapToItem(itemDto, user, request));
         return ItemMapper.mapToItemDto(item);
     }
 
