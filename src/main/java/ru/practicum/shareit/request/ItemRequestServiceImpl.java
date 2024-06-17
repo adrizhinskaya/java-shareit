@@ -6,8 +6,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestHeader;
 import ru.practicum.shareit.exception.ItemRequestNotFoundException;
 import ru.practicum.shareit.exception.UserNotFoundException;
 import ru.practicum.shareit.item.ItemRepository;
@@ -27,19 +25,21 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     private final ItemRepository itemRepository;
     private final ItemRequestRepository requestRepository;
 
+    private User userExistCheck(Long userId) {
+        return userRepository.findById(userId).orElseThrow(() ->
+                new UserNotFoundException("Для операций c запросами нужно создать пользователя"));
+    }
+
     @Override
     public ItemRequestDto create(Long userId, ItemRequestDto itemRequestDto) {
-        User user = userRepository.findById(userId).orElseThrow(() ->
-                new UserNotFoundException("Попытка создания запроса от несуществующего пользователя"));
+        User user = userExistCheck(userId);
         ItemRequest request = requestRepository.save(ItemRequestMapper.mapToItemRequest(itemRequestDto, user));
         return ItemRequestMapper.mapToItemRequestDto(request);
     }
 
     @Override
     public Collection<ItemRequestGetDto> getAllByRequesterId(Long requesterId) {
-        User user = userRepository.findById(requesterId).orElseThrow(() ->
-                new UserNotFoundException("Попытка просмотра запросов от несуществующего пользователя"));
-
+        userExistCheck(requesterId);
         Collection<ItemRequest> requests = requestRepository.findAllByRequester_IdOrderByCreatedAsc(requesterId);
         Collection<ItemRequestGetDto> requestsWithItems = new ArrayList<>(requests.size());
         requests.forEach(request -> requestsWithItems.add(ItemRequestMapper.mapToItemRequestGetDto(
@@ -50,24 +50,24 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     }
 
     @Override
-    public Collection<ItemRequestDto> getAll(Long userId, int from, int size) {
-        User user = userRepository.findById(userId).orElseThrow(() ->
-                new UserNotFoundException("Попытка просмотра запросов от несуществующего пользователя"));
-
+    public Collection<ItemRequestGetDto> getAll(Long userId, int from, int size) {
+        userExistCheck(userId);
         Sort sortById = Sort.by(Sort.Direction.ASC, "created");
-        // затем создаём описание первой "страницы" размером 32 элемента !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        Pageable page = PageRequest.of(from, size, sortById);
-        return  ItemRequestMapper.mapToItemRequestDto(requestRepository.findAll(page));
+        Pageable page = PageRequest.of(from / size, size, sortById);
+        Page<ItemRequest> requests = requestRepository.findAllByRequester_IdNot(userId, page);
+        Collection<ItemRequestGetDto> requestsWithItems = new ArrayList<>(requests.getSize());
+        requests.forEach(request -> requestsWithItems.add(ItemRequestMapper.mapToItemRequestGetDto(
+                request,
+                itemRepository.findAllByRequestId(request.getId())
+        )));
+        return requestsWithItems;
     }
 
     @Override
     public ItemRequestGetDto getById(Long userId, Long requestId) {
-        User user = userRepository.findById(userId).orElseThrow(() ->
-                new UserNotFoundException("Попытка просмотра запросов от несуществующего пользователя"));
-
+        userExistCheck(userId);
         ItemRequest request = requestRepository.findById(requestId).orElseThrow(() ->
                 new ItemRequestNotFoundException("Запроса " + requestId + " не существует"));
-
         return ItemRequestMapper.mapToItemRequestGetDto(request, itemRepository.findAllByRequestId(request.getId()));
     }
 }

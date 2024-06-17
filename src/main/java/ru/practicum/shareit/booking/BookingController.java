@@ -3,16 +3,19 @@ package ru.practicum.shareit.booking;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingDto;
 import ru.practicum.shareit.exception.BookingStateBadRequestException;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import java.util.Arrays;
 import java.util.Collection;
 
 @RestController
+@Validated
 @RequestMapping(path = "/bookings")
 @RequiredArgsConstructor
 @Slf4j
@@ -21,7 +24,6 @@ public class BookingController {
     String postColor = "\u001b[33m" + "POST";
     String patchColor = "\u001b[35m" + "PATCH";
     String getColor = "\u001b[32m" + "GET";
-    String deleteColor = "\u001b[31m" + "DELETE";
     String resetColor = "\u001b[0m";
 
     @PostMapping
@@ -55,27 +57,31 @@ public class BookingController {
 
     @GetMapping()
     public Collection<Booking> getAllByBooker(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                              @RequestParam(required = false, defaultValue = "ALL") String state) {
+                                              @RequestParam(required = false, defaultValue = "ALL") String state,
+                                              @RequestParam(defaultValue = "0") @Min(0) int from,
+                                              @RequestParam(defaultValue = "10") int size) {
         if (!Arrays.asList(BookingState.values()).stream().anyMatch(e -> e.name().equals(state))) {
             throw new BookingStateBadRequestException(state);
         }
 
-        log.info("{} /bookings/{}: {}{}", getColor, state, userId, resetColor);
-        var result = bookingService.getAllByBooker(userId, BookingState.valueOf(state));
-        log.info("completion GET /bookings/{}: {}", state, result.size());
+        log.info("{} /bookings/{} {} {}: {}{}", getColor, state, from, size, userId, resetColor);
+        var result = bookingService.getAllByBooker(userId, BookingState.valueOf(state), from, size);
+        log.info("completion GET /bookings/{} {} {}: {}", state, from, size, result.size());
         return result;
     }
 
     @GetMapping("/owner")
     public Collection<Booking> getAllByOwner(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                             @RequestParam(required = false, defaultValue = "ALL") String state) {
+                                             @RequestParam(required = false, defaultValue = "ALL") String state,
+                                             @RequestParam(defaultValue = "0") @Min(0) int from,
+                                             @RequestParam(defaultValue = "10") int size) {
         if (!Arrays.asList(BookingState.values()).stream().anyMatch(e -> e.name().equals(state))) {
             throw new BookingStateBadRequestException(state);
         }
 
-        log.info("{} /bookings/owner/{}: {}{}", getColor, state, userId, resetColor);
-        var result = bookingService.getAllByOwner(userId, BookingState.valueOf(state));
-        log.info("completion GET /bookings/owner/{}: {}", state, result.size());
+        log.info("{} /bookings/owner/{} {} {}: {}{}", getColor, state, from, size, userId, resetColor);
+        var result = bookingService.getAllByOwner(userId, BookingState.valueOf(state), from, size);
+        log.info("completion GET /bookings/owner/{} {} {}: {}", state, from, size, result.size());
         return result;
     }
 }

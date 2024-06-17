@@ -1,6 +1,8 @@
 package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.BookingStatus;
@@ -33,50 +35,48 @@ public class ItemServiceImpl implements ItemService {
     private final CommentRepository commentRepository;
     private final ItemRequestRepository requestRepository;
 
+    private User userExistCheck(Long userId) {
+        return userRepository.findById(userId).orElseThrow(() ->
+                new UserNotFoundException("Для операций c вещами/комментариями нужно создать пользователя"));
+    }
+
+    private Item itemExistCheck(Long itemId) {
+        return itemRepository.findById(itemId).orElseThrow(() ->
+                new ItemNotFoundException("Вещь не найдена"));
+    }
+
     @Override
     public ItemDto create(Long userId, ItemDto itemDto) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("Попытка создания айтема от " +
-                        "несуществующего пользователя"));
-
+        User user = userExistCheck(userId);
         ItemRequest request = itemDto.getRequestId() == null ? null :
                 requestRepository.findById(itemDto.getRequestId()).orElseThrow(() ->
-                new ItemRequestNotFoundException("Запрос не найден"));
+                        new ItemRequestNotFoundException("Запрос не найден"));
+
         Item item = itemRepository.save(ItemMapper.mapToItem(itemDto, user, request));
         return ItemMapper.mapToItemDto(item);
     }
 
     @Override
     public CommentDto addComment(Long userId, Long itemId, CommentDto comDto) {
-        Set<BookingStatus> stateSet = new HashSet<>();
-        stateSet.add(BookingStatus.REJECTED);
-        stateSet.add(BookingStatus.CANCELED);
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("Попытка создания отзыва от " +
-                        "несуществующего пользователя"));
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new ItemNotFoundException("Вещь не найдена"));
+        Set<BookingStatus> stateSet = Set.of(BookingStatus.REJECTED, BookingStatus.CANCELED);
+        User user = userExistCheck(userId);
+        Item item = itemExistCheck(itemId);
 
         if (!bookingRepository.existsBookingByBooker_IdAndItem_IdAndEndBeforeAndStatusNotIn(userId, itemId,
                 LocalDateTime.now(), stateSet)) {
-            throw new ItemBadRequestException("ОТзыв невозможен если не было букинга или букинг не закончен");
+            throw new ItemBadRequestException("Отзыв невозможен, если не было букинга или букинг не закончен");
         }
         Comment comment = commentRepository.save(CommentMapper.mapToComment(comDto, user, item));
         return CommentMapper.mapToCommentDto(comment);
     }
 
     @Override
-    public Collection<ItemGetDto> getAllByOwnerId(Long userId) {
-        Set<BookingStatus> stateSet = new HashSet<>();
-        stateSet.add(BookingStatus.REJECTED);
-        stateSet.add(BookingStatus.CANCELED);
+    public Collection<ItemGetDto> getAllByOwnerId(Long userId, int from, int size) {
+        Set<BookingStatus> stateSet = Set.of(BookingStatus.REJECTED, BookingStatus.CANCELED);
+        userExistCheck(userId);
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("Попытка просмотра айтемов от " +
-                        "несуществующего пользователя"));
-        List<Item> items = itemRepository.findByOwnerIdOrderByIdAsc(userId);
-        List<ItemGetDto> itemsDtos = new ArrayList<>(items.size());
+        Page<Item> items = itemRepository.findByOwnerIdOrderByIdAsc(userId, PageRequest.of(from / size, size));
+        List<ItemGetDto> itemsDtos = new ArrayList<>(items.getSize());
         items.forEach(item -> itemsDtos.add(ItemMapper.mapToItemDtoForGet(item,
                 bookingRepository.findAllByItem_IdFromStartAsc(item.getId(), stateSet).stream()
                         .findFirst().orElse(null),
@@ -87,26 +87,19 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Collection<ItemDto> getFromSearch(Long userId, String text) {
+    public Collection<ItemDto> getFromSearch(Long userId, String text, int from, int size) {
         if (text.isBlank()) return Collections.emptyList();
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("Попытка просмотра айтемов от " +
-                        "несуществующего пользователя"));
-        List<Item> items = itemRepository.search(text);
+        userExistCheck(userId);
+        Page<Item> items = itemRepository.search(text, PageRequest.of(from / size, size));
         return ItemMapper.mapToItemDto(items);
     }
 
     @Override
     public ItemGetDto getById(Long userId, Long itemId) {
-        Set<BookingStatus> stateSet = new HashSet<>();
-        stateSet.add(BookingStatus.REJECTED);
-        stateSet.add(BookingStatus.CANCELED);
+        Set<BookingStatus> stateSet = Set.of(BookingStatus.REJECTED, BookingStatus.CANCELED);
+        userExistCheck(userId);
+        Item item = itemExistCheck(itemId);
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("Попытка просмотра айтемов от " +
-                        "несуществующего пользователя"));
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new ItemNotFoundException("Вещь не найдена"));
         boolean isOwner = userId.equals(item.getOwner().getId());
         BookingShort last = isOwner ? bookingRepository.findAllByItem_IdFromStartAsc(itemId, stateSet).stream()
                 .findFirst().orElse(null) : null;
@@ -118,11 +111,8 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto update(Long userId, Long itemId, ItemDto newItem) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("Попытка обновления айтема от " +
-                        "несуществующего пользователя"));
-        Item item = itemRepository.findById(itemId)
-                .orElseThrow(() -> new ItemNotFoundException("Попытка обновления несуществующей вещи"));
+        userExistCheck(userId);
+        Item item = itemExistCheck(itemId);
         if (!userId.equals(item.getOwner().getId())) {
             throw new UserNotFoundException("Вещь может обновить только владелец");
         }
