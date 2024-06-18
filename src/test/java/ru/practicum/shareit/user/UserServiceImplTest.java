@@ -3,11 +3,11 @@ package ru.practicum.shareit.user;
 import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.shareit.config.PersistenceConfig;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.model.UserDto;
 
@@ -21,8 +21,7 @@ import static org.hamcrest.Matchers.notNullValue;
 @Rollback(false)
 @Transactional
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-@TestPropertySource(properties = { "db.name=test"})
-@SpringJUnitConfig( { PersistenceConfig.class, UserServiceImpl.class})
+@SpringBootTest
 class UserServiceImplTest {
 
     private final EntityManager em;
