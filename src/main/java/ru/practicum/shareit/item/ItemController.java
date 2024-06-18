@@ -3,15 +3,18 @@ package ru.practicum.shareit.item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.comment.CommentDto;
 import ru.practicum.shareit.item.model.ItemDto;
 import ru.practicum.shareit.item.model.ItemGetDto;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import java.util.Collection;
 
 @RestController
+@Validated
 @RequestMapping("/items")
 @RequiredArgsConstructor
 @Slf4j
@@ -43,19 +46,23 @@ public class ItemController {
     }
 
     @GetMapping
-    public Collection<ItemGetDto> getAllByUserId(@RequestHeader("X-Sharer-User-Id") Long userId) {
-        log.info("{} /items: {} {}", getColor, userId, resetColor);
-        var result = itemService.getAllByOwnerId(userId);
-        log.info("completion GET /items: size {}", result.size());
+    public Collection<ItemGetDto> getAllByUserId(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                                 @RequestParam(defaultValue = "0") @Min(0) int from,
+                                                 @RequestParam(defaultValue = "10") int size) {
+        log.info("{} /items?from{}&size{}: {} {}", getColor, from, size, userId, resetColor);
+        var result = itemService.getAllByOwnerId(userId, from, size);
+        log.info("completion GET /items?from{}&size{}: size {}", from, size, result.size());
         return result;
     }
 
     @GetMapping("/search")
     public Collection<ItemDto> getFromSearch(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                             @RequestParam String text) {
-        log.info("{} /items/search: {}, {}{}", getColor, userId, text, resetColor);
-        var result = itemService.getFromSearch(userId, text);
-        log.info("completion GET /items/search: size {}", result.size());
+                                             @RequestParam String text,
+                                             @RequestParam(defaultValue = "0") @Min(0) int from,
+                                             @RequestParam(defaultValue = "10") int size) {
+        log.info("{} /items/search?from{}&size{}: {}, {}{}", getColor, from, size, userId, text, resetColor);
+        var result = itemService.getFromSearch(userId, text, from, size);
+        log.info("completion GET/items/search?from{}&size{}: size {}", from, size, result.size());
         return result;
     }
 

@@ -16,6 +16,11 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
+    private User userExistCheck(Long userId) {
+        return userRepository.findById(userId).orElseThrow(() ->
+                new UserNotFoundException("Пользователь не найден"));
+    }
+
     @Transactional
     @Override
     public UserDto create(UserDto userDto) {
@@ -31,15 +36,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto getById(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
+        User user = userExistCheck(id);
         return UserMapper.mapToUserDto(user);
     }
 
     @Override
     public UserDto update(Long userId, UserUpdateDto userDto) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("Попытка обновления несуществующего пользователя"));
+        User user = userExistCheck(userId);
         if (userDto.getName() != null) {
             user.setName(userDto.getName());
         }
