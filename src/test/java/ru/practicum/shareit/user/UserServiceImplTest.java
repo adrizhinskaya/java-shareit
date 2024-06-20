@@ -5,18 +5,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.model.UserDto;
 
 import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
+import java.util.Collection;
+import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.notNullValue;
 
 @Rollback(false)
 @Transactional
@@ -25,21 +22,20 @@ import static org.hamcrest.Matchers.notNullValue;
 class UserServiceImplTest {
 
     private final EntityManager em;
-    private final UserService service;
+    private final UserService userService;
 
     @Test
-    public void saveUser() {
-        UserDto userDto = makeUserDto("Пётр", "some@email.com");
-        service.create(userDto);
+    public void getAllUsers() {
+        Collection<UserDto> itemReqColl = userService.getAll();
+        assertThat(itemReqColl.size(), equalTo(0));
 
-        TypedQuery<User> query = em.createQuery("Select u from User u where u.email = :email", User.class);
-        User user = query
-                .setParameter("email", userDto.getEmail())
-                .getSingleResult();
+        UserDto user1 = userService.create(makeUserDto("Пётр", "some@email.com"));
+        UserDto user2 = userService.create(makeUserDto("НеПётр", "any@email.com"));
 
-        assertThat(user.getId(), notNullValue());
-        assertThat(user.getName(), equalTo(userDto.getName()));
-        assertThat(user.getEmail(), equalTo(userDto.getEmail()));
+        List<UserDto> itemReqList = (List<UserDto>) userService.getAll();
+        assertThat(itemReqList.size(), equalTo(2));
+        assertThat(itemReqList.get(0), equalTo(user1));
+        assertThat(itemReqList.get(1), equalTo(user2));
     }
 
     private UserDto makeUserDto(String name, String email) {

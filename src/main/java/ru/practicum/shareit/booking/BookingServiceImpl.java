@@ -29,14 +29,14 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Booking create(Long userId, BookingDto bookingDto) {
-        User user = userExistCheck(userId);
+    public Booking create(Long bookerId, BookingDto bookingDto) {
+        User user = userExistCheck(bookerId);
         Item item = itemRepository.findById(bookingDto.getItemId()).orElseThrow(() ->
                 new ItemNotFoundException("Вещь не найдена"));
         if (!item.getAvailable()) {
             throw new ItemBadRequestException("Попытка бронирования недоступной вещи");
         }
-        if (userId.equals(item.getOwner().getId())) {
+        if (bookerId.equals(item.getOwner().getId())) {
             throw new BookingNotFoundException("Владелец вещи не может её бронировать");
         }
         bookingDto.setStatus(BookingStatus.WAITING);
@@ -44,13 +44,13 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Booking changeStatus(Long userId, Long bookingId, boolean approved) {
-        userExistCheck(userId);
+    public Booking changeStatus(Long itemOwnerId, Long bookingId, boolean approved) {
+        userExistCheck(itemOwnerId);
         Booking booking = bookingRepository.findById(bookingId).orElseThrow(() ->
                 new BookingNotFoundException("Бронирование не найдено"));
-        if (!userId.equals(booking.getItem().getOwner().getId())) {
+        if (!itemOwnerId.equals(booking.getItem().getOwner().getId())) {
             throw new OwnerNotFoundException(
-                    "Попытка смены статуса бронирования от пользователя НЕ являющегося владельцем");
+                    "Попытка смены статуса бронирования от пользователя НЕ являющегося владельцем вещи");
         }
         BookingStatus status = approved ? BookingStatus.APPROVED : BookingStatus.REJECTED;
         if (booking.getStatus().equals(status)) {

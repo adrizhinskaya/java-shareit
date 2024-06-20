@@ -30,13 +30,13 @@ public class BookingMapper {
         return dtos;
     }
 
-    public static Booking mapToBooking(BookingDto bookingDto, Item item, User owner) {
+    public static Booking mapToBooking(BookingDto bookingDto, Item item, User booker) {
         return Booking.builder()
                 .id(bookingDto.getId())
                 .start(bookingDto.getStart())
                 .end(bookingDto.getEnd())
                 .item(item)
-                .booker(owner)
+                .booker(booker)
                 .status(bookingDto.getStatus())
                 .build();
     }
