@@ -8,7 +8,6 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.model.UserDto;
 import ru.practicum.shareit.user.model.UserUpdateDto;
 
-import java.util.Collection;
 import java.util.List;
 
 @Service
@@ -29,7 +28,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Collection<UserDto> getAll() {
+    public List<UserDto> getAll() {
         List<User> users = userRepository.findAll();
         return UserMapper.mapToUserDto(users);
     }

@@ -3,6 +3,7 @@ package ru.practicum.shareit.item;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.BookingStatus;
@@ -24,7 +25,10 @@ import ru.practicum.shareit.user.UserRepository;
 import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -71,23 +75,24 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Collection<ItemGetDto> getAllByOwnerId(Long userId, int from, int size) {
-        Set<BookingStatus> stateSet = Set.of(BookingStatus.REJECTED, BookingStatus.CANCELED);
+    public List<ItemGetDto> getAllByOwnerId(Long userId, int from, int size) {
+        Set<BookingStatus> statusSet = Set.of(BookingStatus.REJECTED, BookingStatus.CANCELED);
         userExistCheck(userId);
+        Pageable page = PageRequest.of(0, 1);
 
         Page<Item> items = itemRepository.findByOwnerIdOrderByIdAsc(userId, PageRequest.of(from / size, size));
         List<ItemGetDto> itemsDtos = new ArrayList<>(items.getSize());
-        items.forEach(item -> itemsDtos.add(ItemMapper.mapToItemDtoForGet(item,
-                bookingRepository.findAllByItem_IdFromStartAsc(item.getId(), stateSet).stream()
+        items.forEach(item -> itemsDtos.add(ItemMapper.mapToItemGetDto(item,
+                bookingRepository.findLastBookingsByItem_IdAndStatusNotIn(item.getId(), statusSet, page).stream()
                         .findFirst().orElse(null),
-                bookingRepository.findAllByItem_IdAfterNowAsc(item.getId(), stateSet).stream()
+                bookingRepository.findNextBookingsByItem_IdAndStatusNotIn(item.getId(), statusSet, page).stream()
                         .findFirst().orElse(null),
                 CommentMapper.mapToCommentDto(commentRepository.findAllByItem_Id(item.getId())))));
         return itemsDtos;
     }
 
     @Override
-    public Collection<ItemDto> getFromSearch(Long userId, String text, int from, int size) {
+    public List<ItemDto> getFromSearch(Long userId, String text, int from, int size) {
         if (text.isBlank()) return Collections.emptyList();
         userExistCheck(userId);
         Page<Item> items = itemRepository.search(text, PageRequest.of(from / size, size));
@@ -96,17 +101,22 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemGetDto getById(Long userId, Long itemId) {
-        Set<BookingStatus> stateSet = Set.of(BookingStatus.REJECTED, BookingStatus.CANCELED);
+        Set<BookingStatus> statusSet = Set.of(BookingStatus.REJECTED, BookingStatus.CANCELED);
         userExistCheck(userId);
         Item item = itemExistCheck(itemId);
+        Pageable page = PageRequest.of(0, 1);
 
         boolean isOwner = userId.equals(item.getOwner().getId());
-        BookingShort last = isOwner ? bookingRepository.findAllByItem_IdFromStartAsc(itemId, stateSet).stream()
-                .findFirst().orElse(null) : null;
-        BookingShort next = isOwner ? bookingRepository.findAllByItem_IdAfterNowAsc(itemId, stateSet).stream()
-                .findFirst().orElse(null) : null;
-        Collection<CommentDto> comms = CommentMapper.mapToCommentDto(commentRepository.findAllByItem_Id(itemId));
-        return ItemMapper.mapToItemDtoForGet(item, last, next, comms);
+        BookingShort last = isOwner ? bookingRepository.findLastBookingsByItem_IdAndStatusNotIn(itemId, statusSet, page)
+                .stream()
+                .findFirst()
+                .orElse(null) : null;
+        BookingShort next = isOwner ? bookingRepository.findNextBookingsByItem_IdAndStatusNotIn(itemId, statusSet, page)
+                .stream()
+                .findFirst()
+                .orElse(null) : null;
+        List<CommentDto> comms = CommentMapper.mapToCommentDto(commentRepository.findAllByItem_Id(itemId));
+        return ItemMapper.mapToItemGetDto(item, last, next, comms);
     }
 
     @Override

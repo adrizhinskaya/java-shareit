@@ -6,7 +6,7 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class CommentMapper {
@@ -19,8 +19,8 @@ public class CommentMapper {
                 .build();
     }
 
-    public static Collection<CommentDto> mapToCommentDto(Iterable<Comment> comments) {
-        Collection<CommentDto> dtos = new ArrayList<>();
+    public static List<CommentDto> mapToCommentDto(Iterable<Comment> comments) {
+        List<CommentDto> dtos = new ArrayList<>();
         for (Comment comment : comments) {
             dtos.add(mapToCommentDto(comment));
         }

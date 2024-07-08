@@ -16,7 +16,8 @@ import ru.practicum.shareit.user.UserRepository;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
+
 
 @Service
 @RequiredArgsConstructor
@@ -38,10 +39,10 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     }
 
     @Override
-    public Collection<ItemRequestGetDto> getAllByRequesterId(Long requesterId) {
+    public List<ItemRequestGetDto> getAllByRequesterId(Long requesterId) {
         userExistCheck(requesterId);
-        Collection<ItemRequest> requests = requestRepository.findAllByRequester_IdOrderByCreatedAsc(requesterId);
-        Collection<ItemRequestGetDto> requestsWithItems = new ArrayList<>(requests.size());
+        List<ItemRequest> requests = requestRepository.findAllByRequester_IdOrderByCreatedAsc(requesterId);
+        List<ItemRequestGetDto> requestsWithItems = new ArrayList<>(requests.size());
         requests.forEach(request -> requestsWithItems.add(ItemRequestMapper.mapToItemRequestGetDto(
                 request,
                 itemRepository.findAllByRequestId(request.getId())
@@ -50,12 +51,12 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     }
 
     @Override
-    public Collection<ItemRequestGetDto> getAll(Long userId, int from, int size) {
+    public List<ItemRequestGetDto> getAll(Long userId, int from, int size) {
         userExistCheck(userId);
         Sort sortById = Sort.by(Sort.Direction.ASC, "created");
         Pageable page = PageRequest.of(from / size, size, sortById);
         Page<ItemRequest> requests = requestRepository.findAllByRequester_IdNot(userId, page);
-        Collection<ItemRequestGetDto> requestsWithItems = new ArrayList<>(requests.getSize());
+        List<ItemRequestGetDto> requestsWithItems = new ArrayList<>(requests.getSize());
         requests.forEach(request -> requestsWithItems.add(ItemRequestMapper.mapToItemRequestGetDto(
                 request,
                 itemRepository.findAllByRequestId(request.getId())

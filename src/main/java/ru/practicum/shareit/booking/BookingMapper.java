@@ -8,7 +8,7 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class BookingMapper {
@@ -22,8 +22,8 @@ public class BookingMapper {
                 .build();
     }
 
-    public static Collection<BookingDto> mapToBookingDto(Iterable<Booking> bookings) {
-        Collection<BookingDto> dtos = new ArrayList<>();
+    public static List<BookingDto> mapToBookingDto(Iterable<Booking> bookings) {
+        List<BookingDto> dtos = new ArrayList<>();
         for (Booking booking : bookings) {
             dtos.add(mapToBookingDto(booking));
         }

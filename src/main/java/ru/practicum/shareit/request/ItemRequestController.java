@@ -10,7 +10,7 @@ import ru.practicum.shareit.request.model.ItemRequestGetDto;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
-import java.util.Collection;
+import java.util.List;
 
 @RestController
 @Validated
@@ -35,7 +35,7 @@ public class ItemRequestController {
     }
 
     @GetMapping
-    public Collection<ItemRequestGetDto> getAllByRequesterId(@RequestHeader("X-Sharer-User-Id") Long requesterId) {
+    public List<ItemRequestGetDto> getAllByRequesterId(@RequestHeader("X-Sharer-User-Id") Long requesterId) {
         log.info("{} /requests: {} {}", getColor, requesterId, resetColor);
         var result = requestService.getAllByRequesterId(requesterId);
         log.info("completion GET /requests: size {}", result.size());
@@ -43,9 +43,9 @@ public class ItemRequestController {
     }
 
     @GetMapping("/all")
-    public Collection<ItemRequestGetDto> getAll(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                                @RequestParam(defaultValue = "0") @Min(0) int from,
-                                                @RequestParam(defaultValue = "10") int size) {
+    public List<ItemRequestGetDto> getAll(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                          @RequestParam(defaultValue = "0") @Min(0) int from,
+                                          @RequestParam(defaultValue = "10") @Min(1) int size) {
         log.info("{} /requests/all?from={}&size={} {}", getColor, from, size, resetColor);
         var result = requestService.getAll(userId, from, size);
         log.info("completion GET /requests/all?from={}&size={}: size {}", from, size, result.size());
@@ -54,7 +54,7 @@ public class ItemRequestController {
 
     @GetMapping("/{requestId}")
     public ItemRequestGetDto getById(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                                @PathVariable Long requestId) {
+                                     @PathVariable Long requestId) {
         log.info("{} /requests/{} {}", getColor, requestId, resetColor);
         var result = requestService.getById(userId, requestId);
         log.info("completion GET /requests/{}: size {}", requestId, result.toString());

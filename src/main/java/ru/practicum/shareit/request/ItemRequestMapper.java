@@ -2,8 +2,6 @@ package ru.practicum.shareit.request;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.model.ItemDto;
 import ru.practicum.shareit.item.model.ItemShort;
 import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.request.model.ItemRequestDto;
@@ -11,7 +9,8 @@ import ru.practicum.shareit.request.model.ItemRequestGetDto;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
+
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ItemRequestMapper {
@@ -24,15 +23,15 @@ public class ItemRequestMapper {
                 .build();
     }
 
-    public static Collection<ItemRequestDto> mapToItemRequestDto(Iterable<ItemRequest> itemRequests) {
-        Collection<ItemRequestDto> dtos = new ArrayList<>();
+    public static List<ItemRequestDto> mapToItemRequestDto(Iterable<ItemRequest> itemRequests) {
+        List<ItemRequestDto> dtos = new ArrayList<>();
         for (ItemRequest itemRequest : itemRequests) {
             dtos.add(mapToItemRequestDto(itemRequest));
         }
         return dtos;
     }
 
-    public static ItemRequestGetDto mapToItemRequestGetDto(ItemRequest request, Collection<ItemShort> itemShorts) {
+    public static ItemRequestGetDto mapToItemRequestGetDto(ItemRequest request, List<ItemShort> itemShorts) {
         return ItemRequestGetDto.builder()
                 .id(request.getId())
                 .description(request.getDescription())

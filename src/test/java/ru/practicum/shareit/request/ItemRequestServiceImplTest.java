@@ -13,7 +13,7 @@ import ru.practicum.shareit.user.model.UserDto;
 
 import javax.persistence.EntityManager;
 import java.time.LocalDateTime;
-import java.util.Collection;
+import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -29,24 +29,26 @@ class ItemRequestServiceImplTest {
 
     @Test
     public void getAllRequests() {
-        userService.create(makeUserDto("Пётр", "some@email.com"));
-        userService.create(makeUserDto("НеПётр", "any@email.com"));
+        UserDto user1 = userService.create(makeUserDto("1Пётр", "some1@email.com"));
+        UserDto user2 = userService.create(makeUserDto("1НеПётр", "any1@email.com"));
 
-        Collection<ItemRequestGetDto> itemReqColl = requestService.getAll(1L, 0, 10);
-        assertThat(itemReqColl.size(), equalTo(0));
+        List<ItemRequestGetDto> itemReqList = requestService.getAll(user1.getId(), 0, 10);
+        assertThat(itemReqList.size(), equalTo(0));
 
-        ItemRequestDto request1 = requestService.create(1L, makeItemRequestDto("Хотел бы воспользоваться щёткой для обуви", LocalDateTime.now()));
-        ItemRequestDto request2 = requestService.create(1L, makeItemRequestDto("НЕХотел бы воспользоваться щёткой для обуви", LocalDateTime.now()));
+        ItemRequestDto request1 = requestService.create(user1.getId(),
+                makeItemRequestDto("Хотел бы воспользоваться щёткой для обуви", LocalDateTime.now()));
+        ItemRequestDto request2 = requestService.create(user1.getId(),
+                makeItemRequestDto("НЕХотел бы воспользоваться щёткой для обуви", LocalDateTime.now()));
 
-        itemReqColl = requestService.getAll(1L, 0, 10);
-        assertThat(itemReqColl.size(), equalTo(0));
+        itemReqList = requestService.getAll(user1.getId(), 0, 10);
+        assertThat(itemReqList.size(), equalTo(0));
 
-        itemReqColl = requestService.getAll(2L, 0, 20);
-        assertThat(itemReqColl.size(), equalTo(2));
+        itemReqList = requestService.getAll(user2.getId(), 0, 20);
+        assertThat(itemReqList.size(), equalTo(2));
 
-        itemReqColl = requestService.getAll(2L, 1, 1);
-        ItemRequestGetDto itemReq = itemReqColl.iterator().next();
-        assertThat(itemReqColl.size(), equalTo(1));
+        itemReqList = requestService.getAll(user2.getId(), 1, 1);
+        ItemRequestGetDto itemReq = itemReqList.get(0);
+        assertThat(itemReqList.size(), equalTo(1));
         assertThat(itemReq.getId(), equalTo(request2.getId()));
         assertThat(itemReq.getDescription(), equalTo(request2.getDescription()));
         assertThat(itemReq.getCreated(), equalTo(request2.getCreated()));

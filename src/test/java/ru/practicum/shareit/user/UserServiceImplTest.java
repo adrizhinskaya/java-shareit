@@ -9,7 +9,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.user.model.UserDto;
 
 import javax.persistence.EntityManager;
-import java.util.Collection;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -26,13 +25,13 @@ class UserServiceImplTest {
 
     @Test
     public void getAllUsers() {
-        Collection<UserDto> itemReqColl = userService.getAll();
+        List<UserDto> itemReqColl = userService.getAll();
         assertThat(itemReqColl.size(), equalTo(0));
 
         UserDto user1 = userService.create(makeUserDto("Пётр", "some@email.com"));
         UserDto user2 = userService.create(makeUserDto("НеПётр", "any@email.com"));
 
-        List<UserDto> itemReqList = (List<UserDto>) userService.getAll();
+        List<UserDto> itemReqList = userService.getAll();
         assertThat(itemReqList.size(), equalTo(2));
         assertThat(itemReqList.get(0), equalTo(user1));
         assertThat(itemReqList.get(1), equalTo(user2));

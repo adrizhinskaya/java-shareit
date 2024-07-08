@@ -59,7 +59,7 @@ public class BookingController {
     public Collection<Booking> getAllByBooker(@RequestHeader("X-Sharer-User-Id") Long userId,
                                               @RequestParam(required = false, defaultValue = "ALL") String state,
                                               @RequestParam(defaultValue = "0") @Min(0) int from,
-                                              @RequestParam(defaultValue = "10") int size) {
+                                              @RequestParam(defaultValue = "10") @Min(1) int size) {
         if (!Arrays.asList(BookingState.values()).stream().anyMatch(e -> e.name().equals(state))) {
             throw new BookingStateBadRequestException(state);
         }
@@ -74,7 +74,7 @@ public class BookingController {
     public Collection<Booking> getAllByOwner(@RequestHeader("X-Sharer-User-Id") Long userId,
                                              @RequestParam(required = false, defaultValue = "ALL") String state,
                                              @RequestParam(defaultValue = "0") @Min(0) int from,
-                                             @RequestParam(defaultValue = "10") int size) {
+                                             @RequestParam(defaultValue = "10") @Min(1) int size) {
         if (!Arrays.asList(BookingState.values()).stream().anyMatch(e -> e.name().equals(state))) {
             throw new BookingStateBadRequestException(state);
         }

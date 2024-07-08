@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import ru.practicum.shareit.booking.model.BookingShort;
 import ru.practicum.shareit.item.comment.CommentDto;
 
-import java.util.Collection;
+import java.util.List;
 
 @Data
 @Builder
@@ -22,5 +22,5 @@ public class ItemGetDto {
     private Boolean available;
     private BookingShort lastBooking;
     private BookingShort nextBooking;
-    private Collection<CommentDto> comments;
+    private List<CommentDto> comments;
 }

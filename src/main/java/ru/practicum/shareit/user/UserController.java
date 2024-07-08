@@ -4,11 +4,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.exception.ColoredCRUDLogger;
 import ru.practicum.shareit.user.model.UserDto;
 import ru.practicum.shareit.user.model.UserUpdateDto;
 
 import javax.validation.Valid;
-import java.util.Collection;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -25,33 +26,36 @@ public class UserController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public UserDto create(@Valid @RequestBody UserDto user) {
-        log.info("{} /users: {}{}", postColor, user.toString(), resetColor);
+        ColoredCRUDLogger.logPost("/users", user.toString());
         var result = userService.create(user);
-        log.info("completion POST /users: {}", result.toString());
+        ColoredCRUDLogger.logPostComplete("/users", result.toString());
         return result;
     }
 
     @GetMapping
-    public Collection<UserDto> getAll() {
-        log.info("{} /users{}", getColor, resetColor);
+    public List<UserDto> getAll() {
+        ColoredCRUDLogger.logGet("/users", null);
         var result = userService.getAll();
-        log.info("completion GET /users: size {}", result.size());
+        ColoredCRUDLogger.logGetComplete("/users", "size" + result.size());
         return result;
     }
 
     @GetMapping("/{id}")
     public UserDto getById(@PathVariable Long id) {
-        log.info("{} /users/{}: {}", getColor, id, resetColor);
+        String url = "/users/" + id;
+        ColoredCRUDLogger.logGet(url, null);
         var result = userService.getById(id);
-        log.info("completion GET /users/{id}: {}", result.toString());
+        ColoredCRUDLogger.logGetComplete(url, result.toString());
         return result;
     }
 
     @PatchMapping("/{userId}")
     public UserDto update(@PathVariable Long userId,
                           @Valid @RequestBody UserUpdateDto userUpdateDto) {
-        log.info("{} /users/{}: {}{}", patchColor, userId, userUpdateDto.toString(), resetColor);
+        String url = "/users/" + userId;
+        ColoredCRUDLogger.logPatch(url, userUpdateDto.toString());
         var result = userService.update(userId, userUpdateDto);
+        ColoredCRUDLogger.logGetComplete(url, result.toString());
         log.info("completion PATCH /users/{userId}: {}", result.toString());
         return result;
     }

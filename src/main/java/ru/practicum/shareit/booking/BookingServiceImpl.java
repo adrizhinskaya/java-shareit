@@ -12,8 +12,8 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.UserRepository;
 import ru.practicum.shareit.user.model.User;
 
-import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -73,54 +73,54 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Collection<Booking> getAllByBooker(Long bookerId, BookingState state, int from, int size) {
+    public List<Booking> getAllByBooker(Long bookerId, BookingState state, int from, int size) {
         userExistCheck(bookerId);
         Pageable page = PageRequest.of(from / size, size);
-        Set<BookingStatus> stateSet = new HashSet<>();
+        Set<BookingStatus> statusSet = new HashSet<>();
         switch (state) {
             case PAST:
                 return bookingRepository.findPastBookingsByBooker_Id(bookerId, page).getContent();
             case CURRENT:
                 return bookingRepository.findCurrentBookingsByBooker_Id(bookerId, page).getContent();
             default:
-                stateSwitch(state, stateSet);
+                stateSwitch(state, statusSet);
         }
-        return bookingRepository.findAllByBooker_IdAndStatusInOrderByStartDesc(bookerId, stateSet, page).getContent();
+        return bookingRepository.findAllByBooker_IdAndStatusInOrderByStartDesc(bookerId, statusSet, page).getContent();
     }
 
     @Override
-    public Collection<Booking> getAllByOwner(Long ownerId, BookingState state, int from, int size) {
+    public List<Booking> getAllByOwner(Long ownerId, BookingState state, int from, int size) {
         userExistCheck(ownerId);
         Pageable page = PageRequest.of(from / size, size);
-        Set<BookingStatus> stateSet = new HashSet<>();
+        Set<BookingStatus> statusSet = new HashSet<>();
         switch (state) {
             case PAST:
                 return bookingRepository.findPastBookingsByOwner_Id(ownerId, page).getContent();
             case CURRENT:
                 return bookingRepository.findCurrentBookingsByOwner_Id(ownerId, page).getContent();
             default:
-                stateSwitch(state, stateSet);
+                stateSwitch(state, statusSet);
         }
-        return bookingRepository.findAllByOwner_Id(ownerId, stateSet, page).getContent();
+        return bookingRepository.findByOwner_IdAndStatusIn(ownerId, statusSet, page).getContent();
     }
 
-    private void stateSwitch(BookingState state, Set<BookingStatus> stateSet) {
+    private void stateSwitch(BookingState state, Set<BookingStatus> statusSet) {
         switch (state) {
             case WAITING:
-                stateSet.add(BookingStatus.WAITING);
+                statusSet.add(BookingStatus.WAITING);
                 break;
             case REJECTED:
-                stateSet.add(BookingStatus.REJECTED);
+                statusSet.add(BookingStatus.REJECTED);
                 break;
             case FUTURE:
-                stateSet.add(BookingStatus.APPROVED);
-                stateSet.add(BookingStatus.WAITING);
+                statusSet.add(BookingStatus.APPROVED);
+                statusSet.add(BookingStatus.WAITING);
                 break;
             case ALL:
-                stateSet.add(BookingStatus.WAITING);
-                stateSet.add(BookingStatus.APPROVED);
-                stateSet.add(BookingStatus.REJECTED);
-                stateSet.add(BookingStatus.CANCELED);
+                statusSet.add(BookingStatus.WAITING);
+                statusSet.add(BookingStatus.APPROVED);
+                statusSet.add(BookingStatus.REJECTED);
+                statusSet.add(BookingStatus.CANCELED);
                 break;
             default:
                 throw new ItemNotFoundException("Unsupported state");

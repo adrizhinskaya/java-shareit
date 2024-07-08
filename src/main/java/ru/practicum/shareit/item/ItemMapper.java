@@ -11,7 +11,7 @@ import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ItemMapper {
@@ -25,16 +25,16 @@ public class ItemMapper {
                 .build();
     }
 
-    public static Collection<ItemDto> mapToItemDto(Iterable<Item> items) {
-        Collection<ItemDto> dtos = new ArrayList<>();
+    public static List<ItemDto> mapToItemDto(Iterable<Item> items) {
+        List<ItemDto> dtos = new ArrayList<>();
         for (Item item : items) {
             dtos.add(mapToItemDto(item));
         }
         return dtos;
     }
 
-    public static ItemGetDto mapToItemDtoForGet(Item item, BookingShort lastBooking, BookingShort nextBooking,
-                                                Collection<CommentDto> comments) {
+    public static ItemGetDto mapToItemGetDto(Item item, BookingShort lastBooking, BookingShort nextBooking,
+                                             List<CommentDto> comments) {
         return ItemGetDto.builder()
                 .id(item.getId())
                 .name(item.getName())
