@@ -122,8 +122,6 @@ public class BookingServiceImpl implements BookingService {
                 statusSet.add(BookingStatus.REJECTED);
                 statusSet.add(BookingStatus.CANCELED);
                 break;
-            default:
-                throw new ItemNotFoundException("Unsupported state");
         }
     }
 }

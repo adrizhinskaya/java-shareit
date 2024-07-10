@@ -8,7 +8,6 @@ import ru.practicum.shareit.request.model.ItemRequestDto;
 import ru.practicum.shareit.request.model.ItemRequestGetDto;
 import ru.practicum.shareit.user.model.User;
 
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -21,14 +20,6 @@ public class ItemRequestMapper {
                 .requesterId(itemRequest.getRequester().getId())
                 .created(itemRequest.getCreated())
                 .build();
-    }
-
-    public static List<ItemRequestDto> mapToItemRequestDto(Iterable<ItemRequest> itemRequests) {
-        List<ItemRequestDto> dtos = new ArrayList<>();
-        for (ItemRequest itemRequest : itemRequests) {
-            dtos.add(mapToItemRequestDto(itemRequest));
-        }
-        return dtos;
     }
 
     public static ItemRequestGetDto mapToItemRequestGetDto(ItemRequest request, List<ItemShort> itemShorts) {

@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.exception.ColoredCRUDLogger;
 import ru.practicum.shareit.request.model.ItemRequestDto;
 import ru.practicum.shareit.request.model.ItemRequestGetDto;
 
@@ -19,26 +20,22 @@ import java.util.List;
 @Slf4j
 public class ItemRequestController {
     private final ItemRequestService requestService;
-    String postColor = "\u001b[33m" + "POST";
-    String patchColor = "\u001b[35m" + "PATCH";
-    String getColor = "\u001b[32m" + "GET";
-    String resetColor = "\u001b[0m";
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ItemRequestDto create(@RequestHeader("X-Sharer-User-Id") Long userId,
                                  @Valid @RequestBody ItemRequestDto itemRequestDto) {
-        log.info("{} /requests: {}{}", postColor, itemRequestDto.toString(), resetColor);
+        ColoredCRUDLogger.logPost("/requests", itemRequestDto.toString());
         var result = requestService.create(userId, itemRequestDto);
-        log.info("completion POST /requests: {}", result.toString());
+        ColoredCRUDLogger.logPostComplete("/requests", result.toString());
         return result;
     }
 
     @GetMapping
     public List<ItemRequestGetDto> getAllByRequesterId(@RequestHeader("X-Sharer-User-Id") Long requesterId) {
-        log.info("{} /requests: {} {}", getColor, requesterId, resetColor);
+        ColoredCRUDLogger.logGet("/requests", requesterId.toString());
         var result = requestService.getAllByRequesterId(requesterId);
-        log.info("completion GET /requests: size {}", result.size());
+        ColoredCRUDLogger.logGetComplete("/requests", "size=" + result.size());
         return result;
     }
 
@@ -46,18 +43,20 @@ public class ItemRequestController {
     public List<ItemRequestGetDto> getAll(@RequestHeader("X-Sharer-User-Id") Long userId,
                                           @RequestParam(defaultValue = "0") @Min(0) int from,
                                           @RequestParam(defaultValue = "10") @Min(1) int size) {
-        log.info("{} /requests/all?from={}&size={} {}", getColor, from, size, resetColor);
+        String url = String.format("/requests/all?from={%s}&size={%s}", from, size);
+        ColoredCRUDLogger.logGet(url, userId.toString());
         var result = requestService.getAll(userId, from, size);
-        log.info("completion GET /requests/all?from={}&size={}: size {}", from, size, result.size());
+        ColoredCRUDLogger.logGetComplete(url, "size=" + result.size());
         return result;
     }
 
     @GetMapping("/{requestId}")
     public ItemRequestGetDto getById(@RequestHeader("X-Sharer-User-Id") Long userId,
                                      @PathVariable Long requestId) {
-        log.info("{} /requests/{} {}", getColor, requestId, resetColor);
+        String url = String.format("/requests/{%s}", requestId);
+        ColoredCRUDLogger.logGet(url, userId.toString());
         var result = requestService.getById(userId, requestId);
-        log.info("completion GET /requests/{}: size {}", requestId, result.toString());
+        ColoredCRUDLogger.logGetComplete(url, result.toString());
         return result;
     }
 }

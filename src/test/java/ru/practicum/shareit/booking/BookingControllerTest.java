@@ -10,9 +10,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingDto;
+import ru.practicum.shareit.exception.BookingNotFoundException;
 import ru.practicum.shareit.exception.ErrorHandler;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
@@ -108,6 +110,21 @@ class BookingControllerTest {
     }
 
     @Test
+    void getByIdWithBookingNotFoundException() throws Exception {
+        when(bookingService.getById(1L, 1L))
+                .thenThrow(BookingNotFoundException.class);
+
+        mvc.perform(get("/bookings/1")
+                        .header("X-Sharer-User-Id", 1L)
+                        .content(mapper.writeValueAsString(1L))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().is(404));
+    }
+
+    @Test
     void getById() throws Exception {
         when(bookingService.getById(1L, 1L))
                 .thenReturn(booking);
@@ -127,6 +144,19 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$.booker.name", is(booking.getBooker().getName())))
                 .andExpect(jsonPath("$.item.id", is(booking.getItem().getId()), Long.class))
                 .andExpect(jsonPath("$.item.name", is(booking.getItem().getName())));
+    }
+
+    @Test
+    void getAllByBookerBadRequest() throws Exception {
+        mvc.perform(get("/bookings")
+                        .header("X-Sharer-User-Id", 1L)
+                        .param("state", "uNsuPPorted")
+                        .param("from", "0")
+                        .param("size", "0")
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -152,6 +182,19 @@ class BookingControllerTest {
                 .andExpect(jsonPath("$[0].booker.name", is(booking.getBooker().getName())))
                 .andExpect(jsonPath("$[0].item.id", is(booking.getItem().getId()), Long.class))
                 .andExpect(jsonPath("$[0].item.name", is(booking.getItem().getName())));
+    }
+
+    @Test
+    void getAllByOwnerBadRequest() throws Exception {
+        mvc.perform(get("/bookings/owner")
+                        .header("X-Sharer-User-Id", 2L)
+                        .param("state", "uNsuPPorted")
+                        .param("from", "0")
+                        .param("size", "0")
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

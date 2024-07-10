@@ -17,11 +17,6 @@ import java.util.List;
 @Slf4j
 public class UserController {
     private final UserService userService;
-    String postColor = "\u001b[33m" + "POST";
-    String patchColor = "\u001b[35m" + "PATCH";
-    String getColor = "\u001b[32m" + "GET";
-    String deleteColor = "\u001b[31m" + "DELETE";
-    String resetColor = "\u001b[0m";
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -36,13 +31,13 @@ public class UserController {
     public List<UserDto> getAll() {
         ColoredCRUDLogger.logGet("/users", null);
         var result = userService.getAll();
-        ColoredCRUDLogger.logGetComplete("/users", "size" + result.size());
+        ColoredCRUDLogger.logGetComplete("/users", "size=" + result.size());
         return result;
     }
 
     @GetMapping("/{id}")
     public UserDto getById(@PathVariable Long id) {
-        String url = "/users/" + id;
+        String url = String.format("/users/{%s}", id);
         ColoredCRUDLogger.logGet(url, null);
         var result = userService.getById(id);
         ColoredCRUDLogger.logGetComplete(url, result.toString());
@@ -52,19 +47,18 @@ public class UserController {
     @PatchMapping("/{userId}")
     public UserDto update(@PathVariable Long userId,
                           @Valid @RequestBody UserUpdateDto userUpdateDto) {
-        String url = "/users/" + userId;
+        String url = String.format("/users/{%s}", userId);
         ColoredCRUDLogger.logPatch(url, userUpdateDto.toString());
         var result = userService.update(userId, userUpdateDto);
-        ColoredCRUDLogger.logGetComplete(url, result.toString());
-        log.info("completion PATCH /users/{userId}: {}", result.toString());
+        ColoredCRUDLogger.logPatchComplete(url, result.toString());
         return result;
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {
-        log.info("{} /users/{}{}", deleteColor, id, resetColor);
+        ColoredCRUDLogger.logDelete("/users", id.toString());
         userService.delete(id);
-        log.info("completion DELETE /users/{id}: {} success", id);
+        ColoredCRUDLogger.logDeleteComplete("/users", id.toString());
     }
 }

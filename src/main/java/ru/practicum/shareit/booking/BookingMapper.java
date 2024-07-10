@@ -7,9 +7,6 @@ import ru.practicum.shareit.booking.model.BookingDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class BookingMapper {
     public static BookingDto mapToBookingDto(Booking booking) {
@@ -20,14 +17,6 @@ public class BookingMapper {
                 .itemId(booking.getItem().getId())
                 .status(booking.getStatus())
                 .build();
-    }
-
-    public static List<BookingDto> mapToBookingDto(Iterable<Booking> bookings) {
-        List<BookingDto> dtos = new ArrayList<>();
-        for (Booking booking : bookings) {
-            dtos.add(mapToBookingDto(booking));
-        }
-        return dtos;
     }
 
     public static Booking mapToBooking(BookingDto bookingDto, Item item, User booker) {

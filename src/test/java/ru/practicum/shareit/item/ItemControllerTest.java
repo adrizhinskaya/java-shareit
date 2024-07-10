@@ -13,10 +13,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import ru.practicum.shareit.booking.model.BookingShort;
-import ru.practicum.shareit.exception.ErrorHandler;
-import ru.practicum.shareit.exception.ItemBadRequestException;
-import ru.practicum.shareit.exception.ItemRequestNotFoundException;
-import ru.practicum.shareit.exception.UserNotFoundException;
+import ru.practicum.shareit.exception.*;
 import ru.practicum.shareit.item.comment.CommentDto;
 import ru.practicum.shareit.item.model.ItemDto;
 import ru.practicum.shareit.item.model.ItemGetDto;
@@ -208,7 +205,7 @@ class ItemControllerTest {
     }
 
     @Test
-    void createItemWithException() throws Exception {
+    void createItemWithItemRequestNotFoundException() throws Exception {
         when(itemService.create(1L, itemDto))
                 .thenThrow(ItemRequestNotFoundException.class);
 
@@ -223,7 +220,7 @@ class ItemControllerTest {
     }
 
     @Test
-    void addItemCommentWithException() throws Exception {
+    void addItemCommentWithItemBadRequestException() throws Exception {
         when(itemService.addComment(1L, 1L, commentDto))
                 .thenThrow(ItemBadRequestException.class);
 
@@ -236,6 +233,22 @@ class ItemControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.print())
                 .andExpect(status().is(400));
+    }
+
+    @Test
+    void getAllByOwnerIdWithOwnerNotFoundException() throws Exception {
+        when(itemService.getAllByOwnerId(1L, 0, 0))
+                .thenThrow(OwnerNotFoundException.class);
+
+        mvc.perform(get("/items")
+                        .header("X-Sharer-User-Id", 1L)
+                        .param("from", "0")
+                        .param("size", "0")
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().is(404));
     }
 
     @Test
@@ -264,6 +277,22 @@ class ItemControllerTest {
                         .param("text", "Отвертка")
                         .param("from", "0")
                         .param("size", "0")
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andDo(MockMvcResultHandlers.print())
+                .andExpect(status().is(404));
+    }
+
+    @Test
+    void getByIdWithItemNotFoundException() throws Exception {
+        CommentDto comm = itemGetDto.getComments().get(0);
+        when(itemService.getById(1L, 1L))
+                .thenThrow(ItemNotFoundException.class);
+
+        mvc.perform(get("/items/1")
+                        .header("X-Sharer-User-Id", 1L)
+                        .content(mapper.writeValueAsString(1L))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))

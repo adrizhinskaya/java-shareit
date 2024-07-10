@@ -11,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import ru.practicum.shareit.exception.ErrorHandler;
+import ru.practicum.shareit.exception.UserEmailConflictException;
 import ru.practicum.shareit.user.model.UserDto;
 
 import java.nio.charset.StandardCharsets;
@@ -48,6 +49,19 @@ class UserControllerTest {
 
         userDto = makeUserDto();
         userDtos = List.of(userDto);
+    }
+
+    @Test
+    void createUserWithThrowable() throws Exception {
+        when(userService.create(any()))
+                .thenThrow(UserEmailConflictException.class);
+
+        mvc.perform(post("/users")
+                        .content(mapper.writeValueAsString(userDto))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().is(409));
     }
 
     @Test

@@ -87,7 +87,7 @@ class ItemServiceImplTest {
                 .build();
     }
 
-    public static CommentDto makeCommentDto(String text, String authorName) {
+    private CommentDto makeCommentDto(String text, String authorName) {
         return CommentDto.builder()
                 .text(text)
                 .authorName(authorName)
@@ -95,7 +95,7 @@ class ItemServiceImplTest {
                 .build();
     }
 
-    public static ItemDto makeItemDto(String name, String description, Boolean available, Long requestId) {
+    private ItemDto makeItemDto(String name, String description, Boolean available, Long requestId) {
         return ItemDto.builder()
                 .name(name)
                 .description(description)
@@ -104,7 +104,7 @@ class ItemServiceImplTest {
                 .build();
     }
 
-    public static BookingDto makeBookingDto(Long itemId) {
+    private BookingDto makeBookingDto(Long itemId) {
         return BookingDto.builder()
                 .start(LocalDateTime.now())
                 .end(LocalDateTime.now().plusNanos(10))
