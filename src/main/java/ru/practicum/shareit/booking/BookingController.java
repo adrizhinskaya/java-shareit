@@ -48,7 +48,7 @@ public class BookingController {
                                               @RequestParam(required = false, defaultValue = "ALL") String state,
                                               @RequestParam(defaultValue = "0") @Min(0) int from,
                                               @RequestParam(defaultValue = "10") @Min(1) int size) {
-        if (!Arrays.asList(BookingState.values()).stream().anyMatch(e -> e.name().equals(state))) {
+        if (Arrays.stream(BookingState.values()).noneMatch(e -> e.name().equals(state))) {
             throw new BookingStateBadRequestException(state);
         }
 
@@ -64,7 +64,7 @@ public class BookingController {
                                              @RequestParam(required = false, defaultValue = "ALL") String state,
                                              @RequestParam(defaultValue = "0") @Min(0) int from,
                                              @RequestParam(defaultValue = "10") @Min(1) int size) {
-        if (!Arrays.asList(BookingState.values()).stream().anyMatch(e -> e.name().equals(state))) {
+        if (Arrays.stream(BookingState.values()).noneMatch(e -> e.name().equals(state))) {
             throw new BookingStateBadRequestException(state);
         }
 
