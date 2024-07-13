@@ -33,18 +33,19 @@ public class ItemMapper {
         return dtos;
     }
 
-    public static ItemGetDto mapToItemGetDto(Item item, BookingShort lastBooking, BookingShort nextBooking,
+    public static ItemGetDto mapToItemGetDto(Item item, List<BookingShort> lastBooking, List<BookingShort> nextBooking,
                                              List<CommentDto> comments) {
         return ItemGetDto.builder()
                 .id(item.getId())
                 .name(item.getName())
                 .description(item.getDescription())
                 .available(item.getAvailable())
-                .lastBooking(lastBooking)
-                .nextBooking(nextBooking)
+                .lastBooking(lastBooking.isEmpty() ? null : lastBooking.get(0))
+                .nextBooking(nextBooking.isEmpty() ? null : nextBooking.get(0))
                 .comments(comments)
                 .build();
     }
+
 
     public static Item mapToItem(ItemDto itemDto, User owner, ItemRequest request) {
         return Item.builder()

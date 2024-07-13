@@ -8,6 +8,7 @@ import lombok.Data;
 @Builder
 @AllArgsConstructor
 public class BookingShort {
+    private Long itemId;
     private Long id;
     private Long bookerId;
 }

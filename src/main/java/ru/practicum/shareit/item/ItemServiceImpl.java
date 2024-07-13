@@ -25,10 +25,11 @@ import ru.practicum.shareit.user.UserRepository;
 import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -76,26 +77,35 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<ItemGetDto> getAllByOwnerId(Long userId, int from, int size) {
-        Set<BookingStatus> statusSet = Set.of(BookingStatus.REJECTED, BookingStatus.CANCELED);
         userExistCheck(userId);
-        Pageable page = PageRequest.of(0, 1);
+        Set<BookingStatus> statusSet = Set.of(BookingStatus.REJECTED, BookingStatus.CANCELED);
 
-        Page<Item> items = itemRepository.findByOwnerIdOrderByIdAsc(userId, PageRequest.of(from / size, size));
-        List<ItemGetDto> itemsDtos = new ArrayList<>(items.getSize());
-        items.forEach(item -> itemsDtos.add(ItemMapper.mapToItemGetDto(item,
-                bookingRepository.findLastBookingsByItem_IdAndStatusNotIn(item.getId(), statusSet, page).stream()
-                        .findFirst().orElse(null),
-                bookingRepository.findNextBookingsByItem_IdAndStatusNotIn(item.getId(), statusSet, page).stream()
-                        .findFirst().orElse(null),
-                CommentMapper.mapToCommentDto(commentRepository.findAllByItem_Id(item.getId())))));
-        return itemsDtos;
+        List<Item> items = findByOwnerIdOrderByIdAscWithPagination(userId, from, size);
+
+        Set<Long> itemIds = items.stream().map(Item::getId).collect(Collectors.toSet());
+        Map<Long, List<BookingShort>> lastBookings = bookingRepository
+                .findLastBookingsByItemIdsInAndStatusNotIn(itemIds, statusSet).stream()
+                .collect(Collectors.groupingBy(BookingShort::getItemId));
+        Map<Long, List<BookingShort>> nextBookings = bookingRepository
+                .findNextBookingsByItemIdsInAndStatusNotIn(itemIds, statusSet).stream()
+                .collect(Collectors.groupingBy(BookingShort::getItemId));
+        Map<Long, List<Comment>> comments = commentRepository
+                .findAllByItemIdIn(itemIds).stream()
+                .collect(Collectors.groupingBy(comment -> comment.getItem().getId()));
+
+        return items.stream()
+                .map(item -> ItemMapper.mapToItemGetDto(item,
+                        lastBookings.getOrDefault(item.getId(), Collections.emptyList()),
+                        nextBookings.getOrDefault(item.getId(), Collections.emptyList()),
+                        CommentMapper.mapToCommentDto(comments.getOrDefault(item.getId(), Collections.emptyList()))))
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<ItemDto> getFromSearch(Long userId, String text, int from, int size) {
         if (text.isBlank()) return Collections.emptyList();
         userExistCheck(userId);
-        Page<Item> items = itemRepository.search(text, PageRequest.of(from / size, size));
+        List<Item> items = searchTextInNameOrDescriptionWithPagination(text, from, size);
         return ItemMapper.mapToItemDto(items);
     }
 
@@ -107,15 +117,11 @@ public class ItemServiceImpl implements ItemService {
         Pageable page = PageRequest.of(0, 1);
 
         boolean isOwner = userId.equals(item.getOwner().getId());
-        BookingShort last = isOwner ? bookingRepository.findLastBookingsByItem_IdAndStatusNotIn(itemId, statusSet, page)
-                .stream()
-                .findFirst()
-                .orElse(null) : null;
-        BookingShort next = isOwner ? bookingRepository.findNextBookingsByItem_IdAndStatusNotIn(itemId, statusSet, page)
-                .stream()
-                .findFirst()
-                .orElse(null) : null;
-        List<CommentDto> comms = CommentMapper.mapToCommentDto(commentRepository.findAllByItem_Id(itemId));
+        List<BookingShort> last = isOwner ? bookingRepository.findLastBookingsByItemIdAndStatusNotIn(itemId, statusSet)
+                : Collections.emptyList();
+        List<BookingShort> next = isOwner ? bookingRepository.findNextBookingsByItemIdAndStatusNotIn(itemId, statusSet)
+                : Collections.emptyList();
+        List<CommentDto> comms = CommentMapper.mapToCommentDto(commentRepository.findAllByItemId(itemId));
         return ItemMapper.mapToItemGetDto(item, last, next, comms);
     }
 
@@ -137,5 +143,57 @@ public class ItemServiceImpl implements ItemService {
         }
         Item updatedItem = itemRepository.save(item);
         return ItemMapper.mapToItemDto(updatedItem);
+    }
+
+    private List<Item> findByOwnerIdOrderByIdAscWithPagination(Long userId, int from, int size) {
+        if (from % size == 0) {
+            return itemRepository.findByOwnerIdOrderByIdAsc(userId, PageRequest.of(from / size, size))
+                    .getContent();
+        }
+
+        int startPage = from / size;
+        double nextPageElPercent = (double) from / size - startPage;
+        int countOfNextPageEl = (int) Math.ceil(nextPageElPercent * size);
+        int countOfStartPageEl = size - countOfNextPageEl;
+
+        Pageable page = PageRequest.of(startPage, size);
+        Page<Item> itemsPage = itemRepository.findByOwnerIdOrderByIdAsc(userId, page);
+        List<Item> itemsList = itemsPage.getContent();
+        List<Item> startPageItems = itemsList.subList(itemsList.size() - countOfStartPageEl, itemsList.size() - 1);
+
+        if (itemsPage.hasNext()) {
+            page = PageRequest.of(startPage + 1, size);
+            itemsPage = itemRepository.findByOwnerIdOrderByIdAsc(userId, page);
+            List<Item> nextPageItems = itemsPage.getContent().subList(0, countOfNextPageEl - 1);
+            startPageItems.addAll(nextPageItems);
+        }
+
+        return startPageItems;
+    }
+
+    private List<Item> searchTextInNameOrDescriptionWithPagination(String text, int from, int size) {
+        if (from % size == 0) {
+            return itemRepository.searchTextInNameOrDescription(text, PageRequest.of(from / size, size))
+                    .getContent();
+        }
+
+        int startPage = from / size;
+        double nextPageElPercent = (double) from / size - startPage;
+        int countOfNextPageEl = (int) Math.ceil(nextPageElPercent * size);
+        int countOfStartPageEl = size - countOfNextPageEl;
+
+        Pageable page = PageRequest.of(startPage, size);
+        Page<Item> itemsPage = itemRepository.searchTextInNameOrDescription(text, page);
+        List<Item> itemsList = itemsPage.getContent();
+        List<Item> startPageItems = itemsList.subList(itemsList.size() - countOfStartPageEl, itemsList.size() - 1);
+
+        if (itemsPage.hasNext()) {
+            page = PageRequest.of(startPage + 1, size);
+            itemsPage = itemRepository.searchTextInNameOrDescription(text, page);
+            List<Item> nextPageItems = itemsPage.getContent().subList(0, countOfNextPageEl - 1);
+            startPageItems.addAll(nextPageItems);
+        }
+
+        return startPageItems;
     }
 }

@@ -1,6 +1,8 @@
 package ru.practicum.shareit.booking;
 
+import io.vavr.Function3;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -15,6 +17,7 @@ import ru.practicum.shareit.user.model.User;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiFunction;
 
 @Service
 @RequiredArgsConstructor
@@ -79,29 +82,33 @@ public class BookingServiceImpl implements BookingService {
         Set<BookingStatus> statusSet = new HashSet<>();
         switch (state) {
             case PAST:
-                return bookingRepository.findPastBookingsByBooker_Id(bookerId, page).getContent();
+                return callFunctionWithPagination(
+                        from, size, bookingRepository::findPastBookingsByBooker_Id, bookerId);
             case CURRENT:
-                return bookingRepository.findCurrentBookingsByBooker_Id(bookerId, page).getContent();
+                return callFunctionWithPagination(
+                        from, size, bookingRepository::findCurrentBookingsByBooker_Id, bookerId);
             default:
                 stateSwitch(state, statusSet);
         }
-        return bookingRepository.findAllByBooker_IdAndStatusInOrderByStartDesc(bookerId, statusSet, page).getContent();
+        return callFunctionWithPagination(
+                from, size, bookingRepository::findAllByBooker_IdAndStatusInOrderByStartDesc, bookerId, statusSet);
     }
 
     @Override
     public List<Booking> getAllByOwner(Long ownerId, BookingState state, int from, int size) {
         userExistCheck(ownerId);
-        Pageable page = PageRequest.of(from / size, size);
         Set<BookingStatus> statusSet = new HashSet<>();
         switch (state) {
             case PAST:
-                return bookingRepository.findPastBookingsByOwner_Id(ownerId, page).getContent();
+                return callFunctionWithPagination(
+                        from, size, bookingRepository::findPastBookingsByOwner_Id, ownerId);
             case CURRENT:
-                return bookingRepository.findCurrentBookingsByOwner_Id(ownerId, page).getContent();
+                return callFunctionWithPagination(
+                        from, size, bookingRepository::findCurrentBookingsByOwner_Id, ownerId);
             default:
                 stateSwitch(state, statusSet);
         }
-        return bookingRepository.findByOwner_IdAndStatusIn(ownerId, statusSet, page).getContent();
+        return callFunctionWithPagination(from, size, bookingRepository::findByOwner_IdAndStatusIn, ownerId, statusSet);
     }
 
     private void stateSwitch(BookingState state, Set<BookingStatus> statusSet) {
@@ -123,5 +130,58 @@ public class BookingServiceImpl implements BookingService {
                 statusSet.add(BookingStatus.CANCELED);
                 break;
         }
+    }
+
+    private List<Booking> callFunctionWithPagination(int from, int size, BiFunction<Long,
+            Pageable, Page<Booking>> repositoryMethod, Long userId) {
+        if (from % size == 0) {
+            return repositoryMethod.apply(userId, PageRequest.of(from / size, size)).getContent();
+        }
+
+        int startPage = from / size;
+        double nextPageElPercent = (double) from / size - startPage;
+        int countOfNextPageEl = (int) Math.ceil(nextPageElPercent * size);
+        int countOfStartPageEl = size - countOfNextPageEl;
+
+        Pageable page = PageRequest.of(startPage, size);
+        Page<Booking> bookingsPage = repositoryMethod.apply(userId, page);
+        List<Booking> itemsList = bookingsPage.getContent();
+        List<Booking> startPageBookings = itemsList.subList(itemsList.size() - countOfStartPageEl,
+                itemsList.size() - 1);
+
+        if (bookingsPage.hasNext()) {
+            page = PageRequest.of(startPage + 1, size);
+            bookingsPage = repositoryMethod.apply(userId, page);
+            List<Booking> nextPageItems = bookingsPage.getContent().subList(0, countOfNextPageEl - 1);
+            startPageBookings.addAll(nextPageItems);
+        }
+        return startPageBookings;
+    }
+
+    private List<Booking> callFunctionWithPagination(int from, int size, Function3<Long,
+            Set<BookingStatus>, Pageable, Page<Booking>> repositoryMethod, Long userId, Set<BookingStatus> statusSet) {
+        if (from % size == 0) {
+            return repositoryMethod.apply(userId, statusSet, PageRequest.of(from / size, size)).getContent();
+        }
+
+        int startPage = from / size;
+        double nextPageElPercent = (double) from / size - startPage;
+        int countOfNextPageEl = (int) Math.ceil(nextPageElPercent * size);
+        int countOfStartPageEl = size - countOfNextPageEl;
+
+        Pageable page = PageRequest.of(startPage, size);
+        Page<Booking> bookingsPage = repositoryMethod.apply(userId, statusSet, page);
+        List<Booking> itemsList = bookingsPage.getContent();
+        List<Booking> startPageBookings = itemsList.subList(itemsList.size() - countOfStartPageEl,
+                itemsList.size() - 1);
+
+        if (bookingsPage.hasNext()) {
+            page = PageRequest.of(startPage + 1, size);
+            bookingsPage = repositoryMethod.apply(userId, statusSet, page);
+            List<Booking> nextPageItems = bookingsPage.getContent().subList(0, countOfNextPageEl - 1);
+            startPageBookings.addAll(nextPageItems);
+        }
+
+        return startPageBookings;
     }
 }

@@ -91,19 +91,6 @@ class ItemRequestDtoValidTest {
                 .andExpect(status().is(400));
     }
 
-//    @Test
-//    void createItemRequestWithNullPagination() throws Exception {
-//        mvc.perform(get("/requests/all")
-//                        .header("X-Sharer-User-Id", 1L)
-//                        .param("from", "-1")
-//                        .param("size", "-1")
-//                        .characterEncoding(StandardCharsets.UTF_8)
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .accept(MediaType.APPLICATION_JSON))
-//                .andDo(MockMvcResultHandlers.print())
-//                .andExpect(status().is(400));
-//    }
-
     private ItemRequestDto makeItemRequestDto(String description) {
         return ItemRequestDto.builder()
                 .id(1L)

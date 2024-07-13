@@ -8,6 +8,7 @@ import ru.practicum.shareit.request.model.ItemRequestDto;
 import ru.practicum.shareit.request.model.ItemRequestGetDto;
 import ru.practicum.shareit.user.model.User;
 
+import java.util.Collections;
 import java.util.List;
 
 
@@ -27,7 +28,7 @@ public class ItemRequestMapper {
                 .id(request.getId())
                 .description(request.getDescription())
                 .created(request.getCreated())
-                .items(itemShorts)
+                .items(itemShorts == null ? Collections.emptyList() : itemShorts)
                 .build();
     }
 

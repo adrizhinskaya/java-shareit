@@ -9,6 +9,7 @@ import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingShort;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
@@ -58,19 +59,31 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
                                             Pageable pageable);
 
 
-    @Query("SELECT new ru.practicum.shareit.booking.model.BookingShort(b.id, b.booker.id) " +
+    @Query("SELECT new ru.practicum.shareit.booking.model.BookingShort(b.item.id, b.id, b.booker.id) " +
+            "FROM Booking b " +
+            "WHERE b.item.id IN :itemIds AND b.status NOT IN :statuses AND b.start < CURRENT_TIMESTAMP " +
+            "ORDER BY b.start DESC")
+    List<BookingShort> findLastBookingsByItemIdsInAndStatusNotIn(@Param("itemIds") Set<Long> itemIds,
+                                                                 @Param("statuses") Set<BookingStatus> statusSet);
+
+    @Query("SELECT new ru.practicum.shareit.booking.model.BookingShort(b.item.id, b.id, b.booker.id ) " +
+            "FROM Booking b " +
+            "WHERE b.item.id IN :itemIds AND b.status NOT IN :statuses AND b.start > CURRENT_TIMESTAMP " +
+            "ORDER BY b.start ASC")
+    List<BookingShort> findNextBookingsByItemIdsInAndStatusNotIn(@Param("itemIds") Set<Long> itemIds,
+                                                                 @Param("statuses") Set<BookingStatus> statusSet);
+
+    @Query("SELECT new ru.practicum.shareit.booking.model.BookingShort(b.item.id, b.id, b.booker.id) " +
             "FROM Booking b " +
             "WHERE b.item.id = :itemId AND b.status NOT IN :statuses AND b.start < CURRENT_TIMESTAMP " +
             "ORDER BY b.start DESC")
-    Page<BookingShort> findLastBookingsByItem_IdAndStatusNotIn(@Param("itemId") Long itemId,
-                                                               @Param("statuses") Set<BookingStatus> statusSet,
-                                                               Pageable pageable);
+    List<BookingShort> findLastBookingsByItemIdAndStatusNotIn(@Param("itemId") Long itemId,
+                                                              @Param("statuses") Set<BookingStatus> statusSet);
 
-    @Query("SELECT new ru.practicum.shareit.booking.model.BookingShort(b.id, b.booker.id ) " +
+    @Query("SELECT new ru.practicum.shareit.booking.model.BookingShort(b.item.id, b.id, b.booker.id ) " +
             "FROM Booking b " +
             "WHERE b.item.id = :itemId AND b.status NOT IN :statuses AND b.start > CURRENT_TIMESTAMP " +
             "ORDER BY b.start ASC")
-    Page<BookingShort> findNextBookingsByItem_IdAndStatusNotIn(@Param("itemId") Long itemId,
-                                                               @Param("statuses") Set<BookingStatus> statusSet,
-                                                               Pageable pageable);
+    List<BookingShort> findNextBookingsByItemIdAndStatusNotIn(@Param("itemId") Long itemId,
+                                                              @Param("statuses") Set<BookingStatus> statusSet);
 }
