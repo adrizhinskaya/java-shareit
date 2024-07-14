@@ -13,7 +13,9 @@ import java.util.Set;
 
 public interface ItemRepository extends JpaRepository<Item, Long> {
     Page<Item> findByOwnerIdOrderByIdAsc(Long ownerId, Pageable pageable);
+
     List<ItemShort> findAllByRequestIdIn(Set<Long> requestIds);
+
     @Query("SELECT new ru.practicum.shareit.item.model.ItemShort(" +
             "it.id, " +
             "it.name, " +

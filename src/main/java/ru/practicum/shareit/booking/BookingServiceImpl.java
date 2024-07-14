@@ -18,6 +18,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -78,7 +80,6 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public List<Booking> getAllByBooker(Long bookerId, BookingState state, int from, int size) {
         userExistCheck(bookerId);
-        Pageable page = PageRequest.of(from / size, size);
         Set<BookingStatus> statusSet = new HashSet<>();
         switch (state) {
             case PAST:
@@ -145,15 +146,22 @@ public class BookingServiceImpl implements BookingService {
 
         Pageable page = PageRequest.of(startPage, size);
         Page<Booking> bookingsPage = repositoryMethod.apply(userId, page);
-        List<Booking> itemsList = bookingsPage.getContent();
-        List<Booking> startPageBookings = itemsList.subList(itemsList.size() - countOfStartPageEl,
-                itemsList.size() - 1);
+        List<Booking> bookingsList = bookingsPage.getContent();
+
+        if (bookingsList.isEmpty()) {
+            return bookingsList;
+        }
+
+        List<Booking> startPageBookings = bookingsList.subList(bookingsList.size() - countOfStartPageEl,
+                bookingsList.size());
 
         if (bookingsPage.hasNext()) {
             page = PageRequest.of(startPage + 1, size);
             bookingsPage = repositoryMethod.apply(userId, page);
-            List<Booking> nextPageItems = bookingsPage.getContent().subList(0, countOfNextPageEl - 1);
-            startPageBookings.addAll(nextPageItems);
+            List<Booking> nextPageBookings = bookingsPage.getContent().subList(0, countOfNextPageEl);
+            return Stream.concat(
+                    startPageBookings.stream(),
+                    nextPageBookings.stream()).collect(Collectors.toList());
         }
         return startPageBookings;
     }
@@ -171,15 +179,22 @@ public class BookingServiceImpl implements BookingService {
 
         Pageable page = PageRequest.of(startPage, size);
         Page<Booking> bookingsPage = repositoryMethod.apply(userId, statusSet, page);
-        List<Booking> itemsList = bookingsPage.getContent();
-        List<Booking> startPageBookings = itemsList.subList(itemsList.size() - countOfStartPageEl,
-                itemsList.size() - 1);
+        List<Booking> bookingsList = bookingsPage.getContent();
+
+        if (bookingsList.isEmpty()) {
+            return bookingsList;
+        }
+
+        List<Booking> startPageBookings = bookingsList.subList(bookingsList.size() - countOfStartPageEl,
+                bookingsList.size());
 
         if (bookingsPage.hasNext()) {
             page = PageRequest.of(startPage + 1, size);
             bookingsPage = repositoryMethod.apply(userId, statusSet, page);
-            List<Booking> nextPageItems = bookingsPage.getContent().subList(0, countOfNextPageEl - 1);
-            startPageBookings.addAll(nextPageItems);
+            List<Booking> nextPageBookings = bookingsPage.getContent().subList(0, countOfNextPageEl);
+            return Stream.concat(
+                    startPageBookings.stream(),
+                    nextPageBookings.stream()).collect(Collectors.toList());
         }
 
         return startPageBookings;

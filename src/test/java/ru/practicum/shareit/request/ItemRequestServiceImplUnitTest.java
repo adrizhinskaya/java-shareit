@@ -19,9 +19,11 @@ import ru.practicum.shareit.user.model.User;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 
 @SpringBootTest
 public class ItemRequestServiceImplUnitTest {
@@ -49,6 +51,8 @@ public class ItemRequestServiceImplUnitTest {
     public void testCreateNotFound() {
         Mockito.when(userRepository.findById(Mockito.any())).thenReturn(Optional.empty());
         assertThrows(UserNotFoundException.class, () -> requestService.create(1L, requestDto));
+        Mockito.verify(requestRepository, Mockito.never())
+                .save(any(ItemRequest.class));
     }
 
     @Test
@@ -58,6 +62,8 @@ public class ItemRequestServiceImplUnitTest {
 
         ItemRequestDto resultRequest = requestService.create(user.getId(), requestDto);
 
+        Mockito.verify(requestRepository, Mockito.times(1))
+                .save(any(ItemRequest.class));
         assertEquals(request.getId(), resultRequest.getId());
         assertEquals(request.getDescription(), resultRequest.getDescription());
         assertEquals(request.getRequester().getId(), resultRequest.getRequesterId());
@@ -68,6 +74,10 @@ public class ItemRequestServiceImplUnitTest {
     public void testGetAllByRequesterIdNotFound() {
         Mockito.when(userRepository.findById(Mockito.any())).thenReturn(Optional.empty());
         assertThrows(UserNotFoundException.class, () -> requestService.getAllByRequesterId(1L));
+        Mockito.verify(requestRepository, Mockito.never())
+                .findAllByRequester_IdOrderByCreatedDesc(any(Long.class));
+        Mockito.verify(itemRepository, Mockito.never())
+                .findAllByRequestIdIn(any(Set.class));
     }
 
     @Test
@@ -79,10 +89,15 @@ public class ItemRequestServiceImplUnitTest {
                 ItemRequestMapper.mapToItemRequestGetDto(itemRequests.get(0), itemShorts));
 
         Mockito.when(userRepository.findById(user.getId())).thenReturn(Optional.of(user));
-        Mockito.when(requestRepository.findAllByRequester_IdOrderByCreatedAsc(1L)).thenReturn(itemRequests);
-        Mockito.when(itemRepository.findAllByRequestId(1L)).thenReturn(itemShorts);
+        Mockito.when(requestRepository.findAllByRequester_IdOrderByCreatedDesc(1L)).thenReturn(itemRequests);
+        Mockito.when(itemRepository.findAllByRequestIdIn(Set.of(1L))).thenReturn(itemShorts);
 
         List<ItemRequestGetDto> resultRequests = requestService.getAllByRequesterId(user.getId());
+
+        Mockito.verify(requestRepository, Mockito.times(1))
+                .findAllByRequester_IdOrderByCreatedDesc(any(Long.class));
+        Mockito.verify(itemRepository, Mockito.times(1))
+                .findAllByRequestIdIn(any(Set.class));
 
         assertEquals(1, resultRequests.size());
         assertEquals(requestGetDtos.get(0), resultRequests.get(0));
@@ -92,10 +107,18 @@ public class ItemRequestServiceImplUnitTest {
     public void testGetByIdNotFound() {
         Mockito.when(userRepository.findById(Mockito.any())).thenReturn(Optional.empty());
         assertThrows(UserNotFoundException.class, () -> requestService.getById(1L, 1L));
+        Mockito.verify(requestRepository, Mockito.never())
+                .findAllByRequester_IdOrderByCreatedDesc(any(Long.class));
+        Mockito.verify(itemRepository, Mockito.never())
+                .findAllByRequestIdIn(any(Set.class));
 
         Mockito.when(userRepository.findById(Mockito.any())).thenReturn(Optional.of(user));
         Mockito.when(requestRepository.findById(Mockito.any())).thenReturn(Optional.empty());
         assertThrows(ItemRequestNotFoundException.class, () -> requestService.getById(1L, 1L));
+        Mockito.verify(requestRepository, Mockito.never())
+                .findAllByRequester_IdOrderByCreatedDesc(any(Long.class));
+        Mockito.verify(itemRepository, Mockito.never())
+                .findAllByRequestIdIn(any(Set.class));
     }
 
     @Test
@@ -110,6 +133,10 @@ public class ItemRequestServiceImplUnitTest {
 
         ItemRequestGetDto resultRequest = requestService.getById(user.getId(), request.getId());
 
+        Mockito.verify(requestRepository, Mockito.times(1))
+                .findById(any(Long.class));
+        Mockito.verify(itemRepository, Mockito.times(1))
+                .findAllByRequestId(any(Long.class));
         assertEquals(requestGetDto, resultRequest);
     }
 

@@ -23,6 +23,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 
 @SpringBootTest
 public class BookingServiceImplUnitTest {
@@ -58,6 +59,8 @@ public class BookingServiceImplUnitTest {
 
         booking.getItem().setAvailable(true);
         assertThrows(BookingNotFoundException.class, () -> bookingService.create(2L, bookingDto));
+        Mockito.verify(bookingRepository, Mockito.never())
+                .save(any(Booking.class));
     }
 
     @Test
@@ -68,6 +71,9 @@ public class BookingServiceImplUnitTest {
 
         Booking resultBooking = bookingService.create(1L, bookingDto);
 
+        Mockito.verify(bookingRepository, Mockito.times(1))
+                .save(any(Booking.class));
+
         assertEquals(booking.getId(), resultBooking.getId());
         assertEquals(booking.getStatus(), resultBooking.getStatus());
         assertEquals(bookingDto.getItemId(), resultBooking.getItem().getId());
@@ -77,16 +83,22 @@ public class BookingServiceImplUnitTest {
 
     @Test
     public void testChangeStatusNotFound() {
-        assertThrows(UserNotFoundException.class, () -> bookingService.changeStatus(2L, 1L, false));
+        assertThrows(UserNotFoundException.class, () -> bookingService.changeStatus(
+                2L, 1L, false));
 
         Mockito.when(userRepository.findById(Mockito.any())).thenReturn(Optional.of(booking.getBooker()));
         Mockito.when(bookingRepository.findById(Mockito.any())).thenReturn(Optional.empty());
-        assertThrows(BookingNotFoundException.class, () -> bookingService.changeStatus(2L, 1L, false));
+        assertThrows(BookingNotFoundException.class, () -> bookingService.changeStatus(
+                2L, 1L, false));
 
         Mockito.when(bookingRepository.findById(Mockito.any())).thenReturn(Optional.of(booking));
-        assertThrows(OwnerNotFoundException.class, () -> bookingService.changeStatus(1L, 1L, false));
+        assertThrows(OwnerNotFoundException.class, () -> bookingService.changeStatus(
+                1L, 1L, false));
 
-        assertThrows(BookingStateBadRequestException.class, () -> bookingService.changeStatus(2L, 1L, true));
+        assertThrows(BookingStateBadRequestException.class, () -> bookingService.changeStatus(
+                2L, 1L, true));
+        Mockito.verify(bookingRepository, Mockito.never())
+                .save(any(Booking.class));
     }
 
     @Test
@@ -97,6 +109,8 @@ public class BookingServiceImplUnitTest {
 
         Booking resultBooking = bookingService.changeStatus(2L, 1L, false);
 
+        Mockito.verify(bookingRepository, Mockito.times(1))
+                .save(any(Booking.class));
         assertEquals(booking.getId(), resultBooking.getId());
         assertEquals(BookingStatus.REJECTED, resultBooking.getStatus());
         assertEquals(bookingDto.getItemId(), resultBooking.getItem().getId());
@@ -129,11 +143,14 @@ public class BookingServiceImplUnitTest {
         assertEquals(bookingDto.getItemId(), resultBooking.getItem().getId());
         assertEquals(bookingDto.getStart(), resultBooking.getStart());
         assertEquals(bookingDto.getEnd(), resultBooking.getEnd());
+        Mockito.verify(bookingRepository, Mockito.times(1))
+                .findById(any(Long.class));
     }
 
     @Test
     public void testGetAllByOwnerNotFound() {
-        assertThrows(UserNotFoundException.class, () -> bookingService.getAllByOwner(2L, BookingState.ALL, 0, 1));
+        assertThrows(UserNotFoundException.class, () -> bookingService.getAllByOwner(
+                2L, BookingState.ALL, 0, 1));
     }
 
     @Test
@@ -144,9 +161,12 @@ public class BookingServiceImplUnitTest {
 
         //BookingState.PAST
         Mockito.when(userRepository.findById(Mockito.any())).thenReturn(Optional.of(booking.getBooker()));
-        Mockito.when(bookingRepository.findPastBookingsByOwner_Id(Mockito.any(), Mockito.any())).thenReturn(bookingPage);
-        Mockito.when(bookingRepository.findCurrentBookingsByOwner_Id(Mockito.any(), Mockito.any())).thenReturn(emptyPage);
-        Mockito.when(bookingRepository.findByOwner_IdAndStatusIn(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(emptyPage);
+        Mockito.when(bookingRepository.findPastBookingsByOwner_Id(
+                Mockito.any(), Mockito.any())).thenReturn(bookingPage);
+        Mockito.when(bookingRepository.findCurrentBookingsByOwner_Id(
+                Mockito.any(), Mockito.any())).thenReturn(emptyPage);
+        Mockito.when(bookingRepository.findByOwner_IdAndStatusIn(
+                Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(emptyPage);
         Mockito.when(bookingRepository.save(Mockito.any(Booking.class))).thenReturn(booking);
 
         List<Booking> resultBookings = bookingService.getAllByOwner(2L, BookingState.PAST, 0, 1);
@@ -159,8 +179,10 @@ public class BookingServiceImplUnitTest {
         assertEquals(bookingDto.getEnd(), resultBookings.get(0).getEnd());
 
         //BookingState.CURRENT
-        Mockito.when(bookingRepository.findPastBookingsByOwner_Id(Mockito.any(), Mockito.any())).thenReturn(emptyPage);
-        Mockito.when(bookingRepository.findCurrentBookingsByOwner_Id(Mockito.any(), Mockito.any())).thenReturn(bookingPage);
+        Mockito.when(bookingRepository.findPastBookingsByOwner_Id(
+                Mockito.any(), Mockito.any())).thenReturn(emptyPage);
+        Mockito.when(bookingRepository.findCurrentBookingsByOwner_Id(
+                Mockito.any(), Mockito.any())).thenReturn(bookingPage);
         Mockito.when(bookingRepository.save(Mockito.any(Booking.class))).thenReturn(booking);
 
         resultBookings = bookingService.getAllByOwner(2L, BookingState.CURRENT, 0, 1);
@@ -173,8 +195,10 @@ public class BookingServiceImplUnitTest {
         assertEquals(bookingDto.getEnd(), resultBookings.get(0).getEnd());
 
         //BookingState.WAITING
-        Mockito.when(bookingRepository.findCurrentBookingsByOwner_Id(Mockito.any(), Mockito.any())).thenReturn(emptyPage);
-        Mockito.when(bookingRepository.findByOwner_IdAndStatusIn(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(bookingPage);
+        Mockito.when(bookingRepository.findCurrentBookingsByOwner_Id(
+                Mockito.any(), Mockito.any())).thenReturn(emptyPage);
+        Mockito.when(bookingRepository.findByOwner_IdAndStatusIn(
+                Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(bookingPage);
         Mockito.when(bookingRepository.save(Mockito.any(Booking.class))).thenReturn(booking);
 
         resultBookings = bookingService.getAllByOwner(2L, BookingState.WAITING, 0, 1);
@@ -187,8 +211,10 @@ public class BookingServiceImplUnitTest {
         assertEquals(bookingDto.getEnd(), resultBookings.get(0).getEnd());
 
         //BookingState.REJECTED
-        Mockito.when(bookingRepository.findCurrentBookingsByOwner_Id(Mockito.any(), Mockito.any())).thenReturn(emptyPage);
-        Mockito.when(bookingRepository.findByOwner_IdAndStatusIn(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(bookingPage);
+        Mockito.when(bookingRepository.findCurrentBookingsByOwner_Id(
+                Mockito.any(), Mockito.any())).thenReturn(emptyPage);
+        Mockito.when(bookingRepository.findByOwner_IdAndStatusIn(
+                Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(bookingPage);
         Mockito.when(bookingRepository.save(Mockito.any(Booking.class))).thenReturn(booking);
 
         resultBookings = bookingService.getAllByOwner(2L, BookingState.REJECTED, 0, 1);
@@ -201,8 +227,10 @@ public class BookingServiceImplUnitTest {
         assertEquals(bookingDto.getEnd(), resultBookings.get(0).getEnd());
 
         //BookingState.FUTURE
-        Mockito.when(bookingRepository.findCurrentBookingsByOwner_Id(Mockito.any(), Mockito.any())).thenReturn(emptyPage);
-        Mockito.when(bookingRepository.findByOwner_IdAndStatusIn(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(bookingPage);
+        Mockito.when(bookingRepository.findCurrentBookingsByOwner_Id(
+                Mockito.any(), Mockito.any())).thenReturn(emptyPage);
+        Mockito.when(bookingRepository.findByOwner_IdAndStatusIn(
+                Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(bookingPage);
         Mockito.when(bookingRepository.save(Mockito.any(Booking.class))).thenReturn(booking);
 
         resultBookings = bookingService.getAllByOwner(2L, BookingState.FUTURE, 0, 1);
@@ -215,8 +243,10 @@ public class BookingServiceImplUnitTest {
         assertEquals(bookingDto.getEnd(), resultBookings.get(0).getEnd());
 
         //BookingState.ALL
-        Mockito.when(bookingRepository.findCurrentBookingsByOwner_Id(Mockito.any(), Mockito.any())).thenReturn(emptyPage);
-        Mockito.when(bookingRepository.findByOwner_IdAndStatusIn(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(bookingPage);
+        Mockito.when(bookingRepository.findCurrentBookingsByOwner_Id(
+                Mockito.any(), Mockito.any())).thenReturn(emptyPage);
+        Mockito.when(bookingRepository.findByOwner_IdAndStatusIn(
+                Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(bookingPage);
         Mockito.when(bookingRepository.save(Mockito.any(Booking.class))).thenReturn(booking);
 
         resultBookings = bookingService.getAllByOwner(2L, BookingState.ALL, 0, 1);

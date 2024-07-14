@@ -16,6 +16,7 @@ import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -49,11 +50,11 @@ class ItemRepositoryTest {
         Page<Item> pages = itemRepository.findByOwnerIdOrderByIdAsc(user1.getId(), page);
         assertEquals(0, pages.getContent().size());
 
-        Item item = itemRepository.save(makeItem("Отвёртка"));
+        Item item = itemRepository.save(makeItem("Отвёртка", request));
         pages = itemRepository.findByOwnerIdOrderByIdAsc(user1.getId(), page);
         assertEquals(1, pages.getContent().size());
 
-        Item item2 = itemRepository.save(makeItem("Супер Отвёртка"));
+        Item item2 = itemRepository.save(makeItem("Супер Отвёртка", request));
         pages = itemRepository.findByOwnerIdOrderByIdAsc(user1.getId(), page);
         assertEquals(1, pages.getContent().size());
 
@@ -64,12 +65,28 @@ class ItemRepositoryTest {
     }
 
     @Test
+    void testFindAllByRequestIdIn() {
+        ItemRequest request1 = requestRepository.save(makeItemRequest());
+        List<ItemShort> itemShorts = itemRepository.findAllByRequestIdIn(Set.of(request1.getId()));
+        assertEquals(0, itemShorts.size());
+
+        Item item = itemRepository.save(makeItem("Отвёртка", request));
+        itemShorts = itemRepository.findAllByRequestIdIn(Set.of(request.getId()));
+        assertEquals(1, itemShorts.size());
+
+        Item item2 = itemRepository.save(makeItem("Супер Отвёртка", request1));
+        itemShorts = itemRepository.findAllByRequestIdIn(Set.of(request.getId(), request1.getId()));
+        assertEquals(2, itemShorts.size());
+        assertEquals(item.getId(), itemShorts.get(0).getId());
+    }
+
+    @Test
     void findAllByRequestId() {
         List<ItemShort> list = itemRepository.findAllByRequestId(1L);
         assertEquals(0, list.size());
 
-        Item item = itemRepository.save(makeItem("Отвёртка"));
-        Item item2 = itemRepository.save(makeItem("Супер Отвёртка"));
+        Item item = itemRepository.save(makeItem("Отвёртка", request));
+        Item item2 = itemRepository.save(makeItem("Супер Отвёртка", request));
         ItemShort itemShort = makeItemShort(item);
         list = itemRepository.findAllByRequestId(request.getId());
         assertEquals(2, list.size());
@@ -79,29 +96,29 @@ class ItemRepositoryTest {
     @Test
     void testSearch() {
         Pageable page = PageRequest.of(0, 1);
-        Page<Item> pages = itemRepository.search("вёрт", page);
+        Page<Item> pages = itemRepository.searchTextInNameOrDescription("вёрт", page);
         assertEquals(0, pages.getContent().size());
 
-        Item item = itemRepository.save(makeItem("Отвёртка"));
-        pages = itemRepository.search("вёрт", page);
+        Item item = itemRepository.save(makeItem("Отвёртка", request));
+        pages = itemRepository.searchTextInNameOrDescription("вёрт", page);
         assertEquals(1, pages.getContent().size());
 
-        Item item2 = itemRepository.save(makeItem("Супер Отвёртка"));
-        pages = itemRepository.search("АккуМ", page);
+        Item item2 = itemRepository.save(makeItem("Супер Отвёртка", request));
+        pages = itemRepository.searchTextInNameOrDescription("АккуМ", page);
         assertEquals(1, pages.getContent().size());
 
         page = PageRequest.of(0, 2);
-        pages = itemRepository.search("АкКум", page);
+        pages = itemRepository.searchTextInNameOrDescription("АкКум", page);
         assertEquals(2, pages.getContent().size());
         assertEquals(item, pages.getContent().get(0));
 
         item2.setAvailable(false);
-        pages = itemRepository.search("ая от", page);
+        pages = itemRepository.searchTextInNameOrDescription("ая от", page);
         assertEquals(1, pages.getContent().size());
         assertEquals(item, pages.getContent().get(0));
     }
 
-    private Item makeItem(String name) {
+    private Item makeItem(String name, ItemRequest request) {
         return Item.builder()
                 .name(name)
                 .description("Аккумуляторная отвертка")

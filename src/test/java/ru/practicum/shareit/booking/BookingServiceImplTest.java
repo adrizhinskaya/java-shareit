@@ -93,6 +93,92 @@ class BookingServiceImplTest {
         });
     }
 
+    @Test
+    public void getAllByBookerPaginationTest() {
+        UserDto user1 = userService.create(makeUserDto("2Пётр", "some2@email.com"));
+        UserDto user2 = userService.create(makeUserDto("3НеПётр", "any3@email.com"));
+
+        ItemDto item1 = itemService.create(user1.getId(), makeItemDto("Аккумуляторная дрель",
+                "Аккумуляторная дрель + аккумулятор", true, null));
+        ItemDto item2 = itemService.create(user1.getId(), makeItemDto("Щётка для обуви",
+                "Стандартная щётка для обуви", true, null));
+
+        Booking book1 = bookingService.create(user2.getId(), makeBookingDto(item1.getId(),
+                LocalDateTime.now().minusSeconds(6), LocalDateTime.now().plusHours(1)));
+        Booking book2 = bookingService.create(user2.getId(), makeBookingDto(item1.getId(),
+                LocalDateTime.now().minusSeconds(5), LocalDateTime.now().plusHours(2)));
+        Booking book3 = bookingService.create(user2.getId(), makeBookingDto(item1.getId(),
+                LocalDateTime.now().minusSeconds(4), LocalDateTime.now().plusHours(3)));
+        Booking book4 = bookingService.create(user2.getId(), makeBookingDto(item2.getId(),
+                LocalDateTime.now().minusSeconds(3), LocalDateTime.now().plusHours(4)));
+        Booking book5 = bookingService.create(user2.getId(), makeBookingDto(item2.getId(),
+                LocalDateTime.now().minusSeconds(2), LocalDateTime.now().plusHours(5)));
+        Booking book6 = bookingService.create(user2.getId(), makeBookingDto(item2.getId(),
+                LocalDateTime.now().minusSeconds(1), LocalDateTime.now().plusHours(6)));
+
+        List<Booking> bookList = bookingService.getAllByBooker(user2.getId(), BookingState.ALL, 3, 3);
+        assertThat(bookList.size(), equalTo(3));
+        assertThat(bookList.get(0).getId(), equalTo(book3.getId()));
+
+        bookList = bookingService.getAllByBooker(user2.getId(), BookingState.ALL, 5, 6);
+        assertThat(bookList.size(), equalTo(1));
+        assertThat(bookList.get(0).getId(), equalTo(book1.getId()));
+
+        bookList = bookingService.getAllByBooker(user2.getId(), BookingState.ALL, 5, 3);
+        assertThat(bookList.size(), equalTo(1));
+        assertThat(bookList.get(0).getId(), equalTo(book1.getId()));
+
+        bookList = bookingService.getAllByBooker(user2.getId(), BookingState.ALL, 2, 3);
+        assertThat(bookList.size(), equalTo(3));
+        assertThat(bookList.get(0).getId(), equalTo(book4.getId()));
+
+        bookList = bookingService.getAllByBooker(user2.getId(), BookingState.ALL, 7, 6);
+        assertThat(bookList.size(), equalTo(0));
+    }
+
+    @Test
+    public void getAllByOwnerPaginationTest() {
+        UserDto user1 = userService.create(makeUserDto("2Пётр", "some2@email.com"));
+        UserDto user2 = userService.create(makeUserDto("3НеПётр", "any3@email.com"));
+
+        ItemDto item1 = itemService.create(user1.getId(), makeItemDto("Аккумуляторная дрель",
+                "Аккумуляторная дрель + аккумулятор", true, null));
+        ItemDto item2 = itemService.create(user1.getId(), makeItemDto("Щётка для обуви",
+                "Стандартная щётка для обуви", true, null));
+
+        Booking book1 = bookingService.create(user2.getId(), makeBookingDto(item1.getId(),
+                LocalDateTime.now().minusSeconds(6), LocalDateTime.now().plusHours(1)));
+        Booking book2 = bookingService.create(user2.getId(), makeBookingDto(item1.getId(),
+                LocalDateTime.now().minusSeconds(5), LocalDateTime.now().plusHours(2)));
+        Booking book3 = bookingService.create(user2.getId(), makeBookingDto(item1.getId(),
+                LocalDateTime.now().minusSeconds(4), LocalDateTime.now().plusHours(3)));
+        Booking book4 = bookingService.create(user2.getId(), makeBookingDto(item2.getId(),
+                LocalDateTime.now().minusSeconds(3), LocalDateTime.now().plusHours(4)));
+        Booking book5 = bookingService.create(user2.getId(), makeBookingDto(item2.getId(),
+                LocalDateTime.now().minusSeconds(2), LocalDateTime.now().plusHours(5)));
+        Booking book6 = bookingService.create(user2.getId(), makeBookingDto(item2.getId(),
+                LocalDateTime.now().minusSeconds(1), LocalDateTime.now().plusHours(6)));
+
+        List<Booking> bookList = bookingService.getAllByOwner(user1.getId(), BookingState.ALL, 3, 3);
+        assertThat(bookList.size(), equalTo(3));
+        assertThat(bookList.get(0).getId(), equalTo(book3.getId()));
+
+        bookList = bookingService.getAllByOwner(user1.getId(), BookingState.ALL, 5, 6);
+        assertThat(bookList.size(), equalTo(1));
+        assertThat(bookList.get(0).getId(), equalTo(book1.getId()));
+
+        bookList = bookingService.getAllByOwner(user1.getId(), BookingState.ALL, 5, 3);
+        assertThat(bookList.size(), equalTo(1));
+        assertThat(bookList.get(0).getId(), equalTo(book1.getId()));
+
+        bookList = bookingService.getAllByOwner(user1.getId(), BookingState.ALL, 2, 3);
+        assertThat(bookList.size(), equalTo(3));
+        assertThat(bookList.get(0).getId(), equalTo(book4.getId()));
+
+        bookList = bookingService.getAllByOwner(user1.getId(), BookingState.ALL, 7, 6);
+        assertThat(bookList.size(), equalTo(0));
+    }
+
     private UserDto makeUserDto(String name, String email) {
         return UserDto.builder()
                 .name(name)

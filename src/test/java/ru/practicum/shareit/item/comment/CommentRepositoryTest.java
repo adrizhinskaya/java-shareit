@@ -11,6 +11,7 @@ import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -39,21 +40,37 @@ class CommentRepositoryTest {
 
     @Test
     void testFindAllByItem_Id() {
-        List<Comment> comments = commentRepository.findAllByItem_Id(item1.getId());
+        List<Comment> comments = commentRepository.findAllByItemId(item1.getId());
         assertEquals(0, comments.size());
 
         Comment comment1 = commentRepository.save(makeComment(item1));
         Comment comment2 = commentRepository.save(makeComment(item2));
-        comments = commentRepository.findAllByItem_Id(item1.getId());
+        comments = commentRepository.findAllByItemId(item1.getId());
         assertEquals(1, comments.size());
         assertEquals(comment1, comments.get(0));
 
         Comment comment3 = commentRepository.save(makeComment(item2));
-        comments = commentRepository.findAllByItem_Id(item2.getId());
+        comments = commentRepository.findAllByItemId(item2.getId());
         assertEquals(2, comments.size());
         assertEquals(comment2, comments.get(0));
     }
 
+    @Test
+    void testFindAllByItemIdIn() {
+        List<Comment> comments = commentRepository.findAllByItemIdIn(Set.of(item1.getId()));
+        assertEquals(0, comments.size());
+
+        Comment comment1 = commentRepository.save(makeComment(item1));
+        Comment comment2 = commentRepository.save(makeComment(item2));
+        comments = commentRepository.findAllByItemIdIn(Set.of(item1.getId()));
+        assertEquals(1, comments.size());
+        assertEquals(comment1, comments.get(0));
+
+        Comment comment3 = commentRepository.save(makeComment(item2));
+        comments = commentRepository.findAllByItemIdIn(Set.of(item1.getId(), item2.getId()));
+        assertEquals(3, comments.size());
+        assertEquals(comment1, comments.get(0));
+    }
 
     private Comment makeComment(Item item) {
         return Comment.builder()

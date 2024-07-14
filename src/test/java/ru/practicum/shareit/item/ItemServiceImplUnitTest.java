@@ -9,6 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.model.BookingShort;
 import ru.practicum.shareit.exception.ItemBadRequestException;
@@ -29,8 +30,10 @@ import ru.practicum.shareit.user.model.User;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 
 @SpringBootTest
 public class ItemServiceImplUnitTest {
@@ -74,6 +77,8 @@ public class ItemServiceImplUnitTest {
         Mockito.when(userRepository.findById(Mockito.any())).thenReturn(Optional.of(itemOwner));
         Mockito.when(requestRepository.findById(Mockito.any())).thenReturn(Optional.empty());
         assertThrows(ItemRequestNotFoundException.class, () -> itemService.create(1L, itemDto));
+        Mockito.verify(itemRepository, Mockito.never())
+                .save(any(Item.class));
     }
 
     @Test
@@ -84,6 +89,8 @@ public class ItemServiceImplUnitTest {
 
         ItemDto resultItem = itemService.create(itemOwner.getId(), itemDto);
 
+        Mockito.verify(itemRepository, Mockito.times(1))
+                .save(any(Item.class));
         assertEquals(item.getId(), resultItem.getId());
         assertEquals(item.getName(), resultItem.getName());
         assertEquals(item.getDescription(), resultItem.getDescription());
@@ -98,11 +105,15 @@ public class ItemServiceImplUnitTest {
         Mockito.when(userRepository.findById(Mockito.any())).thenReturn(Optional.of(itemOwner));
         Mockito.when(itemRepository.findById(Mockito.any())).thenReturn(Optional.empty());
         assertThrows(ItemNotFoundException.class, () -> itemService.addComment(1L, 1L, commentDto));
+        Mockito.verify(commentRepository, Mockito.never())
+                .save(any(Comment.class));
 
         Mockito.when(itemRepository.findById(Mockito.any())).thenReturn(Optional.of(item));
         Mockito.when(bookingRepository.existsBookingByBooker_IdAndItem_IdAndEndBeforeAndStatusNotIn(
                 Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(false);
         assertThrows(ItemBadRequestException.class, () -> itemService.addComment(1L, 1L, commentDto));
+        Mockito.verify(commentRepository, Mockito.never())
+                .save(any(Comment.class));
     }
 
     @Test
@@ -115,6 +126,8 @@ public class ItemServiceImplUnitTest {
 
         CommentDto resultComment = itemService.addComment(requester.getId(), item.getId(), commentDto);
 
+        Mockito.verify(commentRepository, Mockito.times(1))
+                .save(any(Comment.class));
         assertEquals(comment.getId(), resultComment.getId());
         assertEquals(commentDto.getText(), resultComment.getText());
         assertEquals(commentDto.getAuthorName(), resultComment.getAuthorName());
@@ -124,11 +137,20 @@ public class ItemServiceImplUnitTest {
     @Test
     public void testGetAllByOwnerIdNotFound() {
         assertThrows(UserNotFoundException.class, () -> itemService.getAllByOwnerId(1L, 0, 1));
+        Mockito.verify(bookingRepository, Mockito.never())
+                .findLastBookingsByItemIdsInAndStatusNotIn(any(Set.class), any(Set.class));
+        Mockito.verify(bookingRepository, Mockito.never())
+                .findNextBookingsByItemIdsInAndStatusNotIn(any(Set.class), any(Set.class));
+        Mockito.verify(commentRepository, Mockito.never())
+                .findAllByItemIdIn(any(Set.class));
     }
 
     @Test
     public void testGetFromSearchNotFound() {
-        assertThrows(UserNotFoundException.class, () -> itemService.getFromSearch(1L, "Item", 0, 1));
+        assertThrows(UserNotFoundException.class, () -> itemService.getFromSearch(
+                1L, "Item", 0, 1));
+        Mockito.verify(itemRepository, Mockito.never())
+                .searchTextInNameOrDescription(any(String.class), any(Pageable.class));
     }
 
     @Test
@@ -141,9 +163,11 @@ public class ItemServiceImplUnitTest {
 
         assertEquals(0, resultItems.size());
 
-        Mockito.when(itemRepository.search(Mockito.any(), Mockito.any())).thenReturn(page);
+        Mockito.when(itemRepository.searchTextInNameOrDescription(Mockito.any(), Mockito.any())).thenReturn(page);
         resultItems = itemService.getFromSearch(1L, "te", 0, 1);
 
+        Mockito.verify(itemRepository, Mockito.times(1))
+                .searchTextInNameOrDescription(any(String.class), any(Pageable.class));
         assertEquals(1, resultItems.size());
         assertEquals(item.getId(), resultItems.get(0).getId());
         assertEquals(item.getName(), resultItems.get(0).getName());
@@ -158,21 +182,30 @@ public class ItemServiceImplUnitTest {
 
         Mockito.when(userRepository.findById(Mockito.any())).thenReturn(Optional.of(itemOwner));
         Mockito.when(itemRepository.findById(Mockito.any())).thenReturn(Optional.empty());
+
         assertThrows(ItemNotFoundException.class, () -> itemService.getById(1L, 1L));
+        Mockito.verify(bookingRepository, Mockito.never())
+                .findLastBookingsByItemIdAndStatusNotIn(any(Long.class), any(Set.class));
+        Mockito.verify(bookingRepository, Mockito.never())
+                .findNextBookingsByItemIdAndStatusNotIn(any(Long.class), any(Set.class));
+        Mockito.verify(commentRepository, Mockito.never())
+                .findAllByItemId(any(Long.class));
     }
 
     @Test
     public void testGetById() {
-        List<BookingShort> bookingShortList = List.of(new BookingShort(1L, 1L), new BookingShort(2L, 2L));
+        List<BookingShort> bookingShortList = List.of(new BookingShort(1L, 1L, 1L),
+                new BookingShort(2L, 2L, 2L));
         List<Comment> commentList = List.of(comment);
-        Page<BookingShort> bookingShortPage = new PageImpl<>(bookingShortList, PageRequest.of(0, 1), bookingShortList.size());
 
         // userId is Owner
         Mockito.when(userRepository.findById(Mockito.any())).thenReturn(Optional.of(itemOwner));
         Mockito.when(itemRepository.findById(Mockito.any())).thenReturn(Optional.of(item));
-        Mockito.when(bookingRepository.findLastBookingsByItem_IdAndStatusNotIn(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(bookingShortPage);
-        Mockito.when(bookingRepository.findNextBookingsByItem_IdAndStatusNotIn(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(bookingShortPage);
-        Mockito.when(commentRepository.findAllByItem_Id(Mockito.any())).thenReturn(commentList);
+        Mockito.when(bookingRepository.findLastBookingsByItemIdAndStatusNotIn(
+                Mockito.any(), Mockito.any())).thenReturn(bookingShortList);
+        Mockito.when(bookingRepository.findNextBookingsByItemIdAndStatusNotIn(
+                Mockito.any(), Mockito.any())).thenReturn(bookingShortList);
+        Mockito.when(commentRepository.findAllByItemId(Mockito.any())).thenReturn(commentList);
 
         ItemGetDto resultItem = itemService.getById(itemOwner.getId(), 1L);
 
@@ -209,6 +242,9 @@ public class ItemServiceImplUnitTest {
         Mockito.when(userRepository.findById(Mockito.any())).thenReturn(Optional.of(itemOwner));
         Mockito.when(itemRepository.findById(Mockito.any())).thenReturn(Optional.of(item));
         assertThrows(UserNotFoundException.class, () -> itemService.update(5L, 1L, itemDto));
+
+        Mockito.verify(itemRepository, Mockito.never())
+                .save(any(Item.class));
     }
 
     @Test
@@ -220,6 +256,8 @@ public class ItemServiceImplUnitTest {
 
         itemDto.setName("NEW");
         ItemDto resultItem = itemService.update(1L, 1L, itemDto);
+        Mockito.verify(itemRepository, Mockito.times(1))
+                .save(any(Item.class));
 
         assertEquals(item.getId(), resultItem.getId());
         assertEquals(itemDto.getName(), resultItem.getName());

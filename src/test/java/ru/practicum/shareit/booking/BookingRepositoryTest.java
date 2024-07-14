@@ -193,9 +193,23 @@ class BookingRepositoryTest {
     }
 
     @Test
-    void testFindLastBookingsByItem_IdAndStatusNotIn() {
+    void testFindByOwner_IdAndStatusIn() {
         Set<BookingStatus> statusSet = Set.of(BookingStatus.REJECTED, BookingStatus.CANCELED);
-        Pageable page = PageRequest.of(0, 1);
+        Pageable page = PageRequest.of(0, 2);
+
+        bookingRepository.save(booking1);
+        bookingRepository.save(booking2);
+        bookingRepository.save(booking3);
+        bookingRepository.save(booking4);
+
+        Page<Booking> pages = bookingRepository.findByOwner_IdAndStatusIn(user1.getId(), statusSet, page);
+        assertEquals(2, pages.getContent().size());
+        assertEquals(booking4, pages.getContent().get(0));
+    }
+
+    @Test
+    void testFindLastBookingsByItem_IdsAndStatusNotIn() {
+        Set<BookingStatus> statusSet = Set.of(BookingStatus.REJECTED, BookingStatus.CANCELED);
 
         bookingRepository.save(booking1);
         bookingRepository.save(booking2);
@@ -205,20 +219,19 @@ class BookingRepositoryTest {
         BookingShort bookingShort1 = makeBookingShort(booking1);
         BookingShort bookingShort3 = makeBookingShort(booking3);
 
-        Page<BookingShort> pages = bookingRepository.findLastBookingsByItem_IdAndStatusNotIn(
-                item1.getId(), statusSet, page);
-        assertEquals(1, pages.getContent().size());
-        assertEquals(bookingShort1, pages.getContent().get(0));
+        List<BookingShort> pages = bookingRepository.findLastBookingsByItemIdsInAndStatusNotIn(
+                Set.of(item1.getId()), statusSet);
+        assertEquals(1, pages.size());
+        assertEquals(bookingShort1, pages.get(0));
 
-        pages = bookingRepository.findLastBookingsByItem_IdAndStatusNotIn(item2.getId(), statusSet, page);
-        assertEquals(1, pages.getContent().size());
-        assertEquals(bookingShort3, pages.getContent().get(0));
+        pages = bookingRepository.findLastBookingsByItemIdsInAndStatusNotIn(
+                Set.of(item1.getId(), item2.getId()), statusSet);
+        assertEquals(2, pages.size());
     }
 
     @Test
-    void testFindNextBookingsByItem_IdAndStatusNotIn() {
+    void testFindNextBookingsByItem_IdsAndStatusNotIn() {
         Set<BookingStatus> statusSet = Set.of(BookingStatus.WAITING);
-        Pageable page = PageRequest.of(0, 2);
 
         bookingRepository.save(booking1);
         bookingRepository.save(booking2);
@@ -228,14 +241,59 @@ class BookingRepositoryTest {
         BookingShort bookingShort2 = makeBookingShort(booking2);
         BookingShort bookingShort4 = makeBookingShort(booking4);
 
-        Page<BookingShort> pages = bookingRepository.findNextBookingsByItem_IdAndStatusNotIn(
-                item1.getId(), statusSet, page);
-        assertEquals(1, pages.getContent().size());
-        assertEquals(bookingShort2, pages.getContent().get(0));
+        List<BookingShort> pages = bookingRepository.findNextBookingsByItemIdsInAndStatusNotIn(
+                Set.of(item1.getId()), statusSet);
+        assertEquals(1, pages.size());
+        assertEquals(bookingShort2, pages.get(0));
 
-        pages = bookingRepository.findNextBookingsByItem_IdAndStatusNotIn(item2.getId(), statusSet, page);
-        assertEquals(1, pages.getContent().size());
-        assertEquals(bookingShort4, pages.getContent().get(0));
+        pages = bookingRepository.findNextBookingsByItemIdsInAndStatusNotIn(
+                Set.of(item1.getId(), item2.getId()), statusSet);
+        assertEquals(2, pages.size());
+        assertEquals(bookingShort2, pages.get(0));
+    }
+
+    @Test
+    void testFindLastBookingsByItem_IdAndStatusNotIn() {
+        Set<BookingStatus> statusSet = Set.of(BookingStatus.REJECTED, BookingStatus.CANCELED);
+
+        bookingRepository.save(booking1);
+        bookingRepository.save(booking2);
+        bookingRepository.save(booking3);
+        bookingRepository.save(booking4);
+
+        BookingShort bookingShort1 = makeBookingShort(booking1);
+        BookingShort bookingShort3 = makeBookingShort(booking3);
+
+        List<BookingShort> pages = bookingRepository.findLastBookingsByItemIdAndStatusNotIn(
+                item1.getId(), statusSet);
+        assertEquals(1, pages.size());
+        assertEquals(bookingShort1, pages.get(0));
+
+        pages = bookingRepository.findLastBookingsByItemIdAndStatusNotIn(item2.getId(), statusSet);
+        assertEquals(1, pages.size());
+        assertEquals(bookingShort3, pages.get(0));
+    }
+
+    @Test
+    void testFindNextBookingsByItem_IdAndStatusNotIn() {
+        Set<BookingStatus> statusSet = Set.of(BookingStatus.WAITING);
+
+        bookingRepository.save(booking1);
+        bookingRepository.save(booking2);
+        bookingRepository.save(booking3);
+        bookingRepository.save(booking4);
+
+        BookingShort bookingShort2 = makeBookingShort(booking2);
+        BookingShort bookingShort4 = makeBookingShort(booking4);
+
+        List<BookingShort> pages = bookingRepository.findNextBookingsByItemIdAndStatusNotIn(
+                item1.getId(), statusSet);
+        assertEquals(1, pages.size());
+        assertEquals(bookingShort2, pages.get(0));
+
+        pages = bookingRepository.findNextBookingsByItemIdAndStatusNotIn(item2.getId(), statusSet);
+        assertEquals(1, pages.size());
+        assertEquals(bookingShort4, pages.get(0));
     }
 
     private Booking makeBooking(LocalDateTime start, LocalDateTime end, Item item, BookingStatus status) {
@@ -250,6 +308,7 @@ class BookingRepositoryTest {
 
     private BookingShort makeBookingShort(Booking booking) {
         return BookingShort.builder()
+                .itemId(booking.getItem().getId())
                 .id(booking.getId())
                 .bookerId(booking.getBooker().getId())
                 .build();

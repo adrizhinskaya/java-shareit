@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 @Service
@@ -97,14 +98,21 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         page = PageRequest.of(startPage, size, sortById);
         Page<ItemRequest> requestsPage = requestRepository.findAllByRequester_IdNot(requesterId, page);
         List<ItemRequest> requestsList = requestsPage.getContent();
+
+        if (requestsList.isEmpty()) {
+            return requestsList;
+        }
+
         List<ItemRequest> startPageRequests = requestsList.subList(requestsList.size() - countOfStartPageEl,
-                requestsList.size() - 1);
+                requestsList.size());
 
         if (requestsPage.hasNext()) {
             page = PageRequest.of(startPage + 1, size, sortById);
             requestsPage = requestRepository.findAllByRequester_IdNot(requesterId, page);
-            List<ItemRequest> nextPageRequests = requestsPage.getContent().subList(0, countOfNextPageEl - 1);
-            startPageRequests.addAll(nextPageRequests);
+            List<ItemRequest> nextPageRequests = requestsPage.getContent().subList(0, countOfNextPageEl);
+            return Stream.concat(
+                    startPageRequests.stream(),
+                    nextPageRequests.stream()).collect(Collectors.toList());
         }
 
         return startPageRequests;

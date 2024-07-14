@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -159,13 +160,20 @@ public class ItemServiceImpl implements ItemService {
         Pageable page = PageRequest.of(startPage, size);
         Page<Item> itemsPage = itemRepository.findByOwnerIdOrderByIdAsc(userId, page);
         List<Item> itemsList = itemsPage.getContent();
-        List<Item> startPageItems = itemsList.subList(itemsList.size() - countOfStartPageEl, itemsList.size() - 1);
+
+        if (itemsList.isEmpty()) {
+            return itemsList;
+        }
+
+        List<Item> startPageItems = itemsList.subList(itemsList.size() - countOfStartPageEl, itemsList.size());
 
         if (itemsPage.hasNext()) {
             page = PageRequest.of(startPage + 1, size);
             itemsPage = itemRepository.findByOwnerIdOrderByIdAsc(userId, page);
-            List<Item> nextPageItems = itemsPage.getContent().subList(0, countOfNextPageEl - 1);
-            startPageItems.addAll(nextPageItems);
+            List<Item> nextPageItems = itemsPage.getContent().subList(0, countOfNextPageEl);
+            return Stream.concat(
+                    startPageItems.stream(),
+                    nextPageItems.stream()).collect(Collectors.toList());
         }
 
         return startPageItems;
@@ -185,13 +193,20 @@ public class ItemServiceImpl implements ItemService {
         Pageable page = PageRequest.of(startPage, size);
         Page<Item> itemsPage = itemRepository.searchTextInNameOrDescription(text, page);
         List<Item> itemsList = itemsPage.getContent();
-        List<Item> startPageItems = itemsList.subList(itemsList.size() - countOfStartPageEl, itemsList.size() - 1);
+
+        if (itemsList.isEmpty()) {
+            return itemsList;
+        }
+
+        List<Item> startPageItems = itemsList.subList(itemsList.size() - countOfStartPageEl, itemsList.size());
 
         if (itemsPage.hasNext()) {
             page = PageRequest.of(startPage + 1, size);
             itemsPage = itemRepository.searchTextInNameOrDescription(text, page);
-            List<Item> nextPageItems = itemsPage.getContent().subList(0, countOfNextPageEl - 1);
-            startPageItems.addAll(nextPageItems);
+            List<Item> nextPageItems = itemsPage.getContent().subList(0, countOfNextPageEl);
+            return Stream.concat(
+                    startPageItems.stream(),
+                    nextPageItems.stream()).collect(Collectors.toList());
         }
 
         return startPageItems;

@@ -35,17 +35,17 @@ class ItemRequestRepositoryTest {
 
     @Test
     void testFindAllByRequester_IdOrderByCreatedAsc() {
-        List<ItemRequest> list = requestRepository.findAllByRequester_IdOrderByCreatedAsc(1L);
+        List<ItemRequest> list = requestRepository.findAllByRequester_IdOrderByCreatedDesc(1L);
         assertEquals(0, list.size());
 
         ItemRequest itemRequest = requestRepository.save(makeItemRequest(LocalDateTime.now()));
-        list = requestRepository.findAllByRequester_IdOrderByCreatedAsc(itemRequest.getRequester().getId());
+        list = requestRepository.findAllByRequester_IdOrderByCreatedDesc(itemRequest.getRequester().getId());
         assertEquals(1, list.size());
 
         ItemRequest itemRequest2 = requestRepository.save(makeItemRequest(LocalDateTime.now().plusHours(1)));
-        list = requestRepository.findAllByRequester_IdOrderByCreatedAsc(itemRequest.getRequester().getId());
+        list = requestRepository.findAllByRequester_IdOrderByCreatedDesc(itemRequest.getRequester().getId());
         assertEquals(2, list.size());
-        assertEquals(itemRequest, list.get(0));
+        assertEquals(itemRequest2, list.get(0));
     }
 
     @Test
