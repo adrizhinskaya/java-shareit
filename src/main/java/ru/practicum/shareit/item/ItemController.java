@@ -3,32 +3,32 @@ package ru.practicum.shareit.item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.exception.ColoredCRUDLogger;
 import ru.practicum.shareit.item.comment.CommentDto;
 import ru.practicum.shareit.item.model.ItemDto;
 import ru.practicum.shareit.item.model.ItemGetDto;
 
 import javax.validation.Valid;
-import java.util.Collection;
+import javax.validation.constraints.Min;
+import java.util.List;
 
 @RestController
+@Validated
 @RequestMapping("/items")
 @RequiredArgsConstructor
 @Slf4j
 public class ItemController {
     private final ItemService itemService;
-    String postColor = "\u001b[33m" + "POST";
-    String patchColor = "\u001b[35m" + "PATCH";
-    String getColor = "\u001b[32m" + "GET";
-    String resetColor = "\u001b[0m";
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ItemDto create(@RequestHeader("X-Sharer-User-Id") Long userId,
                           @Valid @RequestBody ItemDto itemDto) {
-        log.info("{} /items: {}{}", postColor, itemDto.toString(), resetColor);
+        ColoredCRUDLogger.logPost("/items", itemDto.toString());
         var result = itemService.create(userId, itemDto);
-        log.info("completion POST /items: {}", result.toString());
+        ColoredCRUDLogger.logPostComplete("/items", result.toString());
         return result;
     }
 
@@ -36,35 +36,43 @@ public class ItemController {
     public CommentDto addComment(@RequestHeader("X-Sharer-User-Id") Long userId,
                                  @PathVariable Long itemId,
                                  @Valid @RequestBody CommentDto comDto) {
-        log.info("{} /items/{}/comment: {}, {}{}", postColor, itemId, userId, comDto.toString(), resetColor);
+        String url = String.format("/items/{%s}/comment", itemId);
+        ColoredCRUDLogger.logPost(url, comDto.toString());
         var result = itemService.addComment(userId, itemId, comDto);
-        log.info("completion PATCH /items/{userId}: {}", result.toString());
+        ColoredCRUDLogger.logPostComplete(url, result.toString());
         return result;
     }
 
     @GetMapping
-    public Collection<ItemGetDto> getAllByUserId(@RequestHeader("X-Sharer-User-Id") Long userId) {
-        log.info("{} /items: {} {}", getColor, userId, resetColor);
-        var result = itemService.getAllByOwnerId(userId);
-        log.info("completion GET /items: size {}", result.size());
+    public List<ItemGetDto> getAllByUserId(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                           @RequestParam(defaultValue = "0") @Min(0) int from,
+                                           @RequestParam(defaultValue = "10") @Min(1) int size) {
+        String url = String.format("/items?from{%s}&size{%s}", from, size);
+        ColoredCRUDLogger.logGet(url, userId.toString());
+        var result = itemService.getAllByOwnerId(userId, from, size);
+        ColoredCRUDLogger.logGetComplete(url, "size=" + result.size());
         return result;
     }
 
     @GetMapping("/search")
-    public Collection<ItemDto> getFromSearch(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                             @RequestParam String text) {
-        log.info("{} /items/search: {}, {}{}", getColor, userId, text, resetColor);
-        var result = itemService.getFromSearch(userId, text);
-        log.info("completion GET /items/search: size {}", result.size());
+    public List<ItemDto> getFromSearch(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                       @RequestParam String text,
+                                       @RequestParam(defaultValue = "0") @Min(0) int from,
+                                       @RequestParam(defaultValue = "10") @Min(1) int size) {
+        String url = String.format("/items/search?from{%s}&size{%s}", from, size);
+        ColoredCRUDLogger.logGet(url, text);
+        var result = itemService.getFromSearch(userId, text, from, size);
+        ColoredCRUDLogger.logGetComplete(url, "size=" + result.size());
         return result;
     }
 
     @GetMapping("/{itemId}")
     public ItemGetDto getById(@RequestHeader("X-Sharer-User-Id") Long userId,
                               @PathVariable Long itemId) {
-        log.info("{} /items/{}{}", getColor, itemId, resetColor);
+        String url = String.format("/items/{%s}", itemId);
+        ColoredCRUDLogger.logGet(url, userId.toString());
         var result = itemService.getById(userId, itemId);
-        log.info("completion GET /items/{id}: {}", result.toString());
+        ColoredCRUDLogger.logGetComplete(url, result.toString());
         return result;
     }
 
@@ -72,9 +80,10 @@ public class ItemController {
     public ItemDto update(@RequestHeader("X-Sharer-User-Id") Long userId,
                           @PathVariable Long itemId,
                           @RequestBody ItemDto itemDto) {
-        log.info("{} /items/{}: {}, {}{}", patchColor, itemId, userId, itemDto.toString(), resetColor);
+        String url = String.format("/items/{%s}", itemId);
+        ColoredCRUDLogger.logPatch(url, itemDto.toString());
         var result = itemService.update(userId, itemId, itemDto);
-        log.info("completion PATCH /items/{userId}: {}", result.toString());
+        ColoredCRUDLogger.logPatchComplete(url, result.toString());
         return result;
     }
 }

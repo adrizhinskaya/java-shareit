@@ -3,34 +3,75 @@ package ru.practicum.shareit.booking;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingDto;
 import ru.practicum.shareit.exception.BookingStateBadRequestException;
+import ru.practicum.shareit.exception.ColoredCRUDLogger;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import java.util.Arrays;
 import java.util.Collection;
 
 @RestController
+@Validated
 @RequestMapping(path = "/bookings")
 @RequiredArgsConstructor
 @Slf4j
 public class BookingController {
     private final BookingService bookingService;
-    String postColor = "\u001b[33m" + "POST";
-    String patchColor = "\u001b[35m" + "PATCH";
-    String getColor = "\u001b[32m" + "GET";
-    String deleteColor = "\u001b[31m" + "DELETE";
-    String resetColor = "\u001b[0m";
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Booking create(@RequestHeader("X-Sharer-User-Id") Long userId,
                           @Valid @RequestBody BookingDto bookingDto) {
-        log.info("{} /bookings: {}{}", postColor, bookingDto.toString(), resetColor);
+        ColoredCRUDLogger.logPost("/bookings", bookingDto.toString());
         var result = bookingService.create(userId, bookingDto);
-        log.info("completion POST /bookings: {}", result.toString());
+        ColoredCRUDLogger.logPostComplete("/bookings", result.toString());
+        return result;
+    }
+
+    @GetMapping("/{bookingId}")
+    public Booking getById(@RequestHeader("X-Sharer-User-Id") Long userId,
+                           @PathVariable Long bookingId) {
+        String url = String.format("/bookings/{%s}", bookingId);
+        ColoredCRUDLogger.logGet(url, userId.toString());
+        var result = bookingService.getById(userId, bookingId);
+        ColoredCRUDLogger.logGetComplete(url, result.toString());
+        return result;
+    }
+
+    @GetMapping()
+    public Collection<Booking> getAllByBooker(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                              @RequestParam(required = false, defaultValue = "ALL") String state,
+                                              @RequestParam(defaultValue = "0") @Min(0) int from,
+                                              @RequestParam(defaultValue = "10") @Min(1) int size) {
+        if (Arrays.stream(BookingState.values()).noneMatch(e -> e.name().equals(state))) {
+            throw new BookingStateBadRequestException(state);
+        }
+
+        String url = String.format("/bookings?state={%s}&from{%s}&size{%s}", state, from, size);
+        ColoredCRUDLogger.logGet(url, userId.toString());
+        var result = bookingService.getAllByBooker(userId, BookingState.valueOf(state), from, size);
+        ColoredCRUDLogger.logGetComplete(url, "size=" + result.size());
+        return result;
+    }
+
+    @GetMapping("/owner")
+    public Collection<Booking> getAllByOwner(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                             @RequestParam(required = false, defaultValue = "ALL") String state,
+                                             @RequestParam(defaultValue = "0") @Min(0) int from,
+                                             @RequestParam(defaultValue = "10") @Min(1) int size) {
+        if (Arrays.stream(BookingState.values()).noneMatch(e -> e.name().equals(state))) {
+            throw new BookingStateBadRequestException(state);
+        }
+
+        String url = String.format("/bookings/owner?state={%s}&from{%s}&size{%s}", state, from, size);
+        ColoredCRUDLogger.logGet(url, userId.toString());
+        var result = bookingService.getAllByOwner(userId, BookingState.valueOf(state), from, size);
+        ColoredCRUDLogger.logGetComplete(url, "size=" + result.size());
         return result;
     }
 
@@ -38,44 +79,10 @@ public class BookingController {
     public Booking changeStatus(@RequestHeader("X-Sharer-User-Id") Long userId,
                                 @PathVariable Long bookingId,
                                 @RequestParam boolean approved) {
-        log.info("{} /bookings/{}?approved={}: {}{}", patchColor, bookingId, approved, userId, resetColor);
+        String url = String.format("/bookings/{%s}?approved={%s}", bookingId, approved);
+        ColoredCRUDLogger.logPatch(url, userId.toString());
         var result = bookingService.changeStatus(userId, bookingId, approved);
-        log.info("completion PATCH /bookings/{}?approved={}: {}", bookingId, approved, result.toString());
-        return result;
-    }
-
-    @GetMapping("/{bookingId}")
-    public Booking getById(@RequestHeader("X-Sharer-User-Id") Long userId,
-                           @PathVariable Long bookingId) {
-        log.info("{} /bookings/{}: {}{}", getColor, bookingId, userId, resetColor);
-        var result = bookingService.getById(userId, bookingId);
-        log.info("completion GET /bookings/{}: {}", bookingId, result.toString());
-        return result;
-    }
-
-    @GetMapping()
-    public Collection<Booking> getAllByBooker(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                              @RequestParam(required = false, defaultValue = "ALL") String state) {
-        if (!Arrays.asList(BookingState.values()).stream().anyMatch(e -> e.name().equals(state))) {
-            throw new BookingStateBadRequestException(state);
-        }
-
-        log.info("{} /bookings/{}: {}{}", getColor, state, userId, resetColor);
-        var result = bookingService.getAllByBooker(userId, BookingState.valueOf(state));
-        log.info("completion GET /bookings/{}: {}", state, result.size());
-        return result;
-    }
-
-    @GetMapping("/owner")
-    public Collection<Booking> getAllByOwner(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                             @RequestParam(required = false, defaultValue = "ALL") String state) {
-        if (!Arrays.asList(BookingState.values()).stream().anyMatch(e -> e.name().equals(state))) {
-            throw new BookingStateBadRequestException(state);
-        }
-
-        log.info("{} /bookings/owner/{}: {}{}", getColor, state, userId, resetColor);
-        var result = bookingService.getAllByOwner(userId, BookingState.valueOf(state));
-        log.info("completion GET /bookings/owner/{}: {}", state, result.size());
+        ColoredCRUDLogger.logPatchComplete(url, result.toString());
         return result;
     }
 }

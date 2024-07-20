@@ -1,7 +1,9 @@
-package ru.practicum.shareit.request;
+package ru.practicum.shareit.request.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
@@ -11,6 +13,8 @@ import java.time.LocalDateTime;
 @Builder
 @Entity
 @Table(name = "requests", schema = "public")
+@AllArgsConstructor
+@NoArgsConstructor
 public class ItemRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,6 +24,6 @@ public class ItemRequest {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "requester_id")
     private User requester;
-    @Transient
+    @Column(name = "created_date", nullable = false)
     private LocalDateTime created;
 }

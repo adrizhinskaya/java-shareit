@@ -1,8 +1,5 @@
 package ru.practicum.shareit.item.comment;
 
-
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,7 +14,6 @@ import java.time.LocalDateTime;
 @Builder
 @Entity
 @Table(name = "comments", schema = "public")
-@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @AllArgsConstructor
 @NoArgsConstructor
 public class Comment {
@@ -33,6 +29,5 @@ public class Comment {
     @JoinColumn(name = "author_id")
     private User author;
     @Column(name = "created_date", nullable = false)
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime created;
 }

@@ -8,13 +8,17 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.model.UserDto;
 import ru.practicum.shareit.user.model.UserUpdateDto;
 
-import java.util.Collection;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
+
+    private User userExistCheck(Long userId) {
+        return userRepository.findById(userId).orElseThrow(() ->
+                new UserNotFoundException("Пользователь не найден"));
+    }
 
     @Transactional
     @Override
@@ -24,22 +28,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Collection<UserDto> getAll() {
+    public List<UserDto> getAll() {
         List<User> users = userRepository.findAll();
         return UserMapper.mapToUserDto(users);
     }
 
     @Override
     public UserDto getById(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
+        User user = userExistCheck(id);
         return UserMapper.mapToUserDto(user);
     }
 
     @Override
     public UserDto update(Long userId, UserUpdateDto userDto) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("Попытка обновления несуществующего пользователя"));
+        User user = userExistCheck(userId);
         if (userDto.getName() != null) {
             user.setName(userDto.getName());
         }

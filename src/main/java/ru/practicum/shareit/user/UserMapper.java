@@ -6,7 +6,6 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.model.UserDto;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -19,7 +18,7 @@ public class UserMapper {
                 .build();
     }
 
-    public static Collection<UserDto> mapToUserDto(Iterable<User> users) {
+    public static List<UserDto> mapToUserDto(Iterable<User> users) {
         List<UserDto> result = new ArrayList<>();
         for (User user : users) {
             result.add(mapToUserDto(user));
