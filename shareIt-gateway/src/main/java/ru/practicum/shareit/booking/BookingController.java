@@ -42,7 +42,8 @@ public class BookingController {
     @GetMapping()
     public ResponseEntity<Object> getAllByBooker(@RequestHeader("X-Sharer-User-Id") Long userId,
                                                  @RequestParam(name = "state", defaultValue = "ALL") String state,
-                                                 @RequestParam(name = "from", defaultValue = "0") @PositiveOrZero int from,
+                                                 @RequestParam(name = "from", defaultValue = "0")
+                                                 @PositiveOrZero int from,
                                                  @RequestParam(name = "size", defaultValue = "10") @Positive int size) {
         if (Arrays.stream(BookingState.values()).noneMatch(e -> e.name().equals(state))) {
             throw new BookingStateBadRequestException(state);
@@ -56,7 +57,8 @@ public class BookingController {
     @GetMapping("/owner")
     public ResponseEntity<Object> getAllByOwner(@RequestHeader("X-Sharer-User-Id") Long userId,
                                                 @RequestParam(name = "from", defaultValue = "ALL") String state,
-                                                @RequestParam(name = "from", defaultValue = "0") @PositiveOrZero int from,
+                                                @RequestParam(name = "from", defaultValue = "0")
+                                                @PositiveOrZero int from,
                                                 @RequestParam(name = "size", defaultValue = "10") @Positive int size) {
         if (Arrays.stream(BookingState.values()).noneMatch(e -> e.name().equals(state))) {
             throw new BookingStateBadRequestException(state);

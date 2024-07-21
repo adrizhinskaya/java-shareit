@@ -10,7 +10,6 @@ import ru.practicum.shareit.exception.ColoredCRUDLogger;
 import ru.practicum.shareit.request.model.ItemRequestDto;
 
 import javax.validation.Valid;
-import javax.validation.constraints.Min;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 

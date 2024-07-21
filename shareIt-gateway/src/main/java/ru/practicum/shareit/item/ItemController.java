@@ -41,7 +41,8 @@ public class ItemController {
 
     @GetMapping
     public ResponseEntity<Object> getAllByUserId(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                                 @RequestParam(name = "from", defaultValue = "0") @PositiveOrZero int from,
+                                                 @RequestParam(name = "from", defaultValue = "0")
+                                                 @PositiveOrZero int from,
                                                  @RequestParam(name = "size", defaultValue = "10") @Positive int size) {
         String url = String.format("GATEWAY /items?from{%s}&size{%s}", from, size);
         ColoredCRUDLogger.logGet(url, userId.toString());
@@ -51,7 +52,8 @@ public class ItemController {
     @GetMapping("/search")
     public ResponseEntity<Object> getFromSearch(@RequestHeader("X-Sharer-User-Id") Long userId,
                                                 @RequestParam String text,
-                                                @RequestParam(name = "from", defaultValue = "0") @PositiveOrZero int from,
+                                                @RequestParam(name = "from", defaultValue = "0")
+                                                @PositiveOrZero int from,
                                                 @RequestParam(name = "size", defaultValue = "10") @Positive int size) {
         String url = String.format("GATEWAY /items/search?from{%s}&size{%s}", from, size);
         ColoredCRUDLogger.logGet(url, text);

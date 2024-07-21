@@ -8,7 +8,6 @@ import ru.practicum.shareit.exception.ColoredCRUDLogger;
 import ru.practicum.shareit.user.model.UserDto;
 import ru.practicum.shareit.user.model.UserUpdateDto;
 
-import javax.validation.Valid;
 import java.util.List;
 
 @RestController
