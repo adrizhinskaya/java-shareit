@@ -56,7 +56,7 @@ public class BookingController {
 
     @GetMapping("/owner")
     public ResponseEntity<Object> getAllByOwner(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                                @RequestParam(name = "from", defaultValue = "ALL") String state,
+                                                @RequestParam(name = "state", defaultValue = "ALL") String state,
                                                 @RequestParam(name = "from", defaultValue = "0")
                                                 @PositiveOrZero int from,
                                                 @RequestParam(name = "size", defaultValue = "10") @Positive int size) {
@@ -72,7 +72,7 @@ public class BookingController {
     @PatchMapping("/{bookingId}")
     public ResponseEntity<Object> changeStatus(@RequestHeader("X-Sharer-User-Id") Long userId,
                                                @PathVariable Long bookingId,
-                                               @RequestParam boolean approved) {
+                                               @RequestParam(name = "approved") boolean approved) {
         String url = String.format("GATEWAY /bookings/{%s}?approved={%s}", bookingId, approved);
         ColoredCRUDLogger.logPatch(url, userId.toString());
         return bookingClient.changeStatus(userId, bookingId, approved);

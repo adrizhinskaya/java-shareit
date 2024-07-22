@@ -20,7 +20,7 @@ public class ItemController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ItemDto create(@RequestHeader Long userId,
+    public ItemDto create(@RequestHeader("X-Sharer-User-Id") Long userId,
                           @RequestBody ItemDto itemDto) {
         ColoredCRUDLogger.logPost("/items", itemDto.toString());
         var result = itemService.create(userId, itemDto);
@@ -29,7 +29,7 @@ public class ItemController {
     }
 
     @PostMapping("/{itemId}/comment")
-    public CommentDto addComment(@RequestHeader Long userId,
+    public CommentDto addComment(@RequestHeader("X-Sharer-User-Id") Long userId,
                                  @PathVariable Long itemId,
                                  @RequestBody CommentDto comDto) {
         String url = String.format("/items/{%s}/comment", itemId);
@@ -40,9 +40,9 @@ public class ItemController {
     }
 
     @GetMapping
-    public List<ItemGetDto> getAllByUserId(@RequestHeader Long userId,
-                                           @RequestParam int from,
-                                           @RequestParam int size) {
+    public List<ItemGetDto> getAllByUserId(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                           @RequestParam(name = "from") int from,
+                                           @RequestParam(name = "size") int size) {
         String url = String.format("/items?from{%s}&size{%s}", from, size);
         ColoredCRUDLogger.logGet(url, userId.toString());
         var result = itemService.getAllByOwnerId(userId, from, size);
@@ -51,10 +51,10 @@ public class ItemController {
     }
 
     @GetMapping("/search")
-    public List<ItemDto> getFromSearch(@RequestHeader Long userId,
-                                       @RequestParam String text,
-                                       @RequestParam int from,
-                                       @RequestParam int size) {
+    public List<ItemDto> getFromSearch(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                       @RequestParam(name = "text") String text,
+                                       @RequestParam(name = "from") int from,
+                                       @RequestParam(name = "size") int size) {
         String url = String.format("/items/search?from{%s}&size{%s}", from, size);
         ColoredCRUDLogger.logGet(url, text);
         var result = itemService.getFromSearch(userId, text, from, size);
@@ -63,7 +63,7 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public ItemGetDto getById(@RequestHeader Long userId,
+    public ItemGetDto getById(@RequestHeader("X-Sharer-User-Id") Long userId,
                               @PathVariable Long itemId) {
         String url = String.format("/items/{%s}", itemId);
         ColoredCRUDLogger.logGet(url, userId.toString());
@@ -73,7 +73,7 @@ public class ItemController {
     }
 
     @PatchMapping("/{itemId}")
-    public ItemDto update(@RequestHeader Long userId,
+    public ItemDto update(@RequestHeader("X-Sharer-User-Id") Long userId,
                           @PathVariable Long itemId,
                           @RequestBody ItemDto itemDto) {
         String url = String.format("/items/{%s}", itemId);

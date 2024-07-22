@@ -27,37 +27,37 @@ public class ItemClient extends BaseClient {
         );
     }
 
-    public ResponseEntity<Object> create(long userId, ItemDto requestDto) {
+    public ResponseEntity<Object> create(Long userId, ItemDto requestDto) {
         return post("", userId, requestDto);
     }
 
-    public ResponseEntity<Object> addComment(long userId, long itemId, CommentDto requestDto) {
+    public ResponseEntity<Object> addComment(Long userId, long itemId, CommentDto requestDto) {
         return post("/" + itemId + "/comment", userId, requestDto);
     }
 
-    public ResponseEntity<Object> getAllByOwnerId(long userId, Integer from, Integer size) {
+    public ResponseEntity<Object> getAllByOwnerId(Long userId, Integer from, Integer size) {
         Map<String, Object> parameters = Map.of(
                 "from", from,
                 "size", size
         );
-        return get("", userId, parameters);
+        return get("?from={from}&size={size}", userId, parameters);
     }
 
-    public ResponseEntity<Object> getFromSearch(long userId, String text, Integer from, Integer size) {
+    public ResponseEntity<Object> getFromSearch(Long userId, String text, Integer from, Integer size) {
         Map<String, Object> parameters = Map.of(
                 "text", text,
                 "from", from,
                 "size", size
         );
-        return get("/search", userId, parameters);
+        return get("/search?text={text}&from={from}&size={size}", userId, parameters);
     }
 
-    public ResponseEntity<Object> getById(long userId, Long itemId) {
+    public ResponseEntity<Object> getById(Long userId, Long itemId) {
         return get("/" + itemId, userId);
     }
 
 
-    public ResponseEntity<Object> update(long userId, long itemId, ItemDto requestDto) {
+    public ResponseEntity<Object> update(Long userId, long itemId, ItemDto requestDto) {
         return patch("/" + itemId, userId, requestDto);
     }
 }

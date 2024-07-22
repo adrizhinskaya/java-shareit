@@ -51,7 +51,7 @@ public class ItemController {
 
     @GetMapping("/search")
     public ResponseEntity<Object> getFromSearch(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                                @RequestParam String text,
+                                                @RequestParam(name = "text", defaultValue = "") String text,
                                                 @RequestParam(name = "from", defaultValue = "0")
                                                 @PositiveOrZero int from,
                                                 @RequestParam(name = "size", defaultValue = "10") @Positive int size) {

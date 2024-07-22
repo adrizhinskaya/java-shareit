@@ -19,7 +19,7 @@ public class ItemRequestController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ItemRequestDto create(@RequestHeader Long userId,
+    public ItemRequestDto create(@RequestHeader("X-Sharer-User-Id") Long userId,
                                  @RequestBody ItemRequestDto itemRequestDto) {
         ColoredCRUDLogger.logPost("/requests", itemRequestDto.toString());
         var result = requestService.create(userId, itemRequestDto);
@@ -28,7 +28,7 @@ public class ItemRequestController {
     }
 
     @GetMapping
-    public List<ItemRequestGetDto> getAllByRequesterId(@RequestHeader Long requesterId) {
+    public List<ItemRequestGetDto> getAllByRequesterId(@RequestHeader("X-Sharer-User-Id") Long requesterId) {
         ColoredCRUDLogger.logGet("/requests", requesterId.toString());
         var result = requestService.getAllByRequesterId(requesterId);
         ColoredCRUDLogger.logGetComplete("/requests", "size=" + result.size());
@@ -36,9 +36,9 @@ public class ItemRequestController {
     }
 
     @GetMapping("/all")
-    public List<ItemRequestGetDto> getAll(@RequestHeader Long userId,
-                                          @RequestParam int from,
-                                          @RequestParam int size) {
+    public List<ItemRequestGetDto> getAll(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                          @RequestParam(name = "from") int from,
+                                          @RequestParam(name = "size") int size) {
         String url = String.format("/requests/all?from={%s}&size={%s}", from, size);
         ColoredCRUDLogger.logGet(url, userId.toString());
         var result = requestService.getAll(userId, from, size);
@@ -47,7 +47,7 @@ public class ItemRequestController {
     }
 
     @GetMapping("/{requestId}")
-    public ItemRequestGetDto getById(@RequestHeader Long userId,
+    public ItemRequestGetDto getById(@RequestHeader("X-Sharer-User-Id") Long userId,
                                      @PathVariable Long requestId) {
         String url = String.format("/requests/{%s}", requestId);
         ColoredCRUDLogger.logGet(url, userId.toString());

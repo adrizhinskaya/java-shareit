@@ -21,7 +21,7 @@ public class BookingController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Booking create(@RequestHeader Long userId,
+    public Booking create(@RequestHeader("X-Sharer-User-Id") Long userId,
                           @RequestBody BookingDto bookingDto) {
         ColoredCRUDLogger.logPost("/bookings", bookingDto.toString());
         var result = bookingService.create(userId, bookingDto);
@@ -30,7 +30,7 @@ public class BookingController {
     }
 
     @GetMapping("/{bookingId}")
-    public Booking getById(@RequestHeader Long userId,
+    public Booking getById(@RequestHeader("X-Sharer-User-Id") Long userId,
                            @PathVariable Long bookingId) {
         String url = String.format("/bookings/{%s}", bookingId);
         ColoredCRUDLogger.logGet(url, userId.toString());
@@ -40,10 +40,10 @@ public class BookingController {
     }
 
     @GetMapping()
-    public Collection<Booking> getAllByBooker(@RequestHeader Long userId,
-                                              @RequestParam String state,
-                                              @RequestParam int from,
-                                              @RequestParam int size) {
+    public Collection<Booking> getAllByBooker(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                              @RequestParam(name = "state") String state,
+                                              @RequestParam(name = "from") int from,
+                                              @RequestParam(name = "size") int size) {
         if (Arrays.stream(BookingState.values()).noneMatch(e -> e.name().equals(state))) {
             throw new BookingStateBadRequestException(state);
         }
@@ -56,10 +56,10 @@ public class BookingController {
     }
 
     @GetMapping("/owner")
-    public Collection<Booking> getAllByOwner(@RequestHeader Long userId,
-                                             @RequestParam String state,
-                                             @RequestParam int from,
-                                             @RequestParam int size) {
+    public Collection<Booking> getAllByOwner(@RequestHeader("X-Sharer-User-Id") Long userId,
+                                             @RequestParam(name = "state") String state,
+                                             @RequestParam(name = "from") int from,
+                                             @RequestParam(name = "size") int size) {
         if (Arrays.stream(BookingState.values()).noneMatch(e -> e.name().equals(state))) {
             throw new BookingStateBadRequestException(state);
         }
@@ -72,9 +72,9 @@ public class BookingController {
     }
 
     @PatchMapping("/{bookingId}")
-    public Booking changeStatus(@RequestHeader Long userId,
+    public Booking changeStatus(@RequestHeader("X-Sharer-User-Id") Long userId,
                                 @PathVariable Long bookingId,
-                                @RequestParam boolean approved) {
+                                @RequestParam(name = "approved") boolean approved) {
         String url = String.format("/bookings/{%s}?approved={%s}", bookingId, approved);
         ColoredCRUDLogger.logPatch(url, userId.toString());
         var result = bookingService.changeStatus(userId, bookingId, approved);

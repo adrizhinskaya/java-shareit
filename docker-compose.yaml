@@ -9,7 +9,7 @@ services:
     depends_on:
       - shareit-server
     environment:
-      - SHAREIT_SEVER_URL=http://shareit-server:8090
+      - SHAREIT_SERVER_URL=http://shareit-server:8090
 
   shareit-server:
     build: shareIt-server
