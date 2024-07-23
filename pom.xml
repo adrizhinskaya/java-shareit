@@ -15,12 +15,12 @@
     <packaging>pom</packaging>
 
     <name>ShareIt</name>
-    <modules>
-		<module>shareIt-gateway</module>
-		<module>shareIt-server</module>
+	<modules>
+		<module>shareit-gateway</module>
+		<module>shareit-server</module>
 	</modules>
 
-    <properties>
+	<properties>
 		<java.version>11</java.version>
 	</properties>
 

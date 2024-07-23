@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   shareit-gateway:
-    build: shareIt-gateway
+    build: shareit-gateway
     image: shareit-gateway-image
     container_name: shareit-gateway-container
     ports:
@@ -12,7 +12,7 @@ services:
       - SHAREIT_SERVER_URL=http://shareit-server:8090
 
   shareit-server:
-    build: shareIt-server
+    build: shareit-server
     image: shareit-server-image
     container_name: shareit-server-container
     ports:
